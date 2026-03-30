@@ -1,3 +1,4 @@
+import sys
 import time
 
 def display_laby(laby, current_pos):
@@ -11,9 +12,12 @@ def display_laby(laby, current_pos):
                 row += symbols.get(laby[i][j], 'S ')
         print(row)
 
-def tester(code, laby):
+def tester(code, laby, return_history=False):
     if not laby:
-        print("✗ Labyrinthe vide")
+        message = "Labyrinthe vide"
+        if return_history:
+            return {'error': message, 'history': [], 'current': None}
+        print(f"✗ {message}")
         return
 
     start = None
@@ -26,11 +30,27 @@ def tester(code, laby):
             break
 
     if start is None:
-        print("✗ Depart introuvable (case 2 ou 4)")
+        message = "Depart introuvable (case 2 ou 4)"
+        if return_history:
+            return {'error': message, 'history': [], 'current': None}
+        print(f"✗ {message}")
         return
 
     current_pos = [start]
     history = [start]
+    trace = []
+    code_lines = code.splitlines()
+
+    def tracer(frame, event, arg):
+        if event == 'line' and frame.f_code.co_filename == '<string>':
+            lineno = frame.f_lineno
+            line = code_lines[lineno - 1] if 1 <= lineno <= len(code_lines) else ''
+            trace.append({
+                'lineno': lineno,
+                'line': line,
+                'position': list(current_pos[0]),
+            })
+        return tracer
 
     def move(direction):
         moves = {
@@ -57,10 +77,31 @@ def tester(code, laby):
         history.append((nx, ny))
         return current_pos[0]
 
+    error = None
     try:
+        sys.settrace(tracer)
         exec(code, {'laby': laby, 'move': move})
     except Exception as exc:
-        print(f"✗ Erreur pendant l'execution: {exc}")
+        error = f"Erreur pendant l'execution: {exc}"
+    finally:
+        sys.settrace(None)
+
+    if return_history:
+        x, y = current_pos[0]
+        status = 'success' if laby[x][y] == 'O' else 'failed'
+        message = 'Arrivee atteinte' if status == 'success' else f"Arrivee non atteinte. Position finale: {current_pos[0]}"
+        result = {
+            'error': error,
+            'history': history,
+            'trace': trace,
+            'current': current_pos[0],
+            'status': status,
+            'message': message,
+        }
+        return result
+
+    if error:
+        print(f"✗ {error}")
 
     for pos in history:
         display_laby(laby, pos)

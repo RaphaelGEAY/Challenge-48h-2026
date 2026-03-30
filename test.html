@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labyrinthe API CRUD</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      color: #f1f3f8;
+      background: #0f1520;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(circle at top, #1b2340 0%, #0f1520 45%, #06101f 100%);
+      color: #f1f3f8;
+    }
+
+    h1, h2 {
+      margin: 0 0 16px;
+    }
+
+    .page {
+      display: grid;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: rgba(19, 28, 47, 0.95);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: #3c67ff;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: #5a84ff;
+    }
+
+    button.secondary {
+      background: #1f2b4b;
+      color: #cbd2e1;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .code-area,
+    .output-area {
+      width: 100%;
+      min-height: 220px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: #0b1221;
+      color: #e6ecff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.95rem;
+      padding: 16px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    #maze {
+      display: grid;
+      gap: 2px;
+      background: rgba(255,255,255,0.04);
+      padding: 12px;
+      border-radius: 16px;
+      justify-content: start;
+      overflow-x: auto;
+    }
+
+    .cell {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .cell-wall { background: #2b334d; }
+    .cell-space { background: #121920; }
+    .cell-start { background: #2e66ff; }
+    .cell-goal { background: #12c96a; }
+    .cell-player { background: #ffb74d; color: #08120f; }
+
+    .meta {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .meta-item {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="panel">
+      <h1>Labyrinthe CRUD API</h1>
+      <p>Cette page utilise les fonctions de <code>script/code_reader.py</code>, <code>script/tester.py</code> et <code>main.py</code> via des appels API sans modifier leurs contenus.</p>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <button id="loadMazeBtn">Charger le labyrinthe</button>
+        <button id="loadCodeBtn" class="secondary">Charger le code</button>
+        <button id="saveCodeBtn" class="secondary">Sauvegarder le code</button>
+        <button id="runTesterBtn">Exécuter tester()</button>
+        <button id="runMainBtn">Exécuter main.py</button>
+      </div>
+
+      <div class="grid">
+        <div>
+          <h2>Labyrinthe</h2>
+          <div id="maze" aria-label="Visualisation du labyrinthe"></div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:#2b334d"></span> Mur</span>
+            <span><span class="legend-dot" style="background:#121920"></span> Vide</span>
+            <span><span class="legend-dot" style="background:#2e66ff"></span> Départ</span>
+            <span><span class="legend-dot" style="background:#12c96a"></span> Sortie</span>
+          </div>
+        </div>
+
+        <div>
+          <h2>Code de la solution</h2>
+          <textarea id="codeArea" class="code-area" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Statut</h2>
+      <textarea id="outputArea" class="output-area" readonly></textarea>
+    </section>
+
+    <section class="panel meta">
+      <div class="meta-item"><strong>API</strong><p>/api/maze, /api/code, /api/run-tester, /api/run-main</p></div>
+      <div class="meta-item"><strong>Instructions</strong><p>Lancez <code>python app.py</code> puis ouvrez <code>http://127.0.0.1:5000/</code>.</p></div>
+    </section>
+  </div>
+
+  <script>
+    const mazeEl = document.getElementById('maze');
+    const codeArea = document.getElementById('codeArea');
+    const outputArea = document.getElementById('outputArea');
+    const loadMazeBtn = document.getElementById('loadMazeBtn');
+    const loadCodeBtn = document.getElementById('loadCodeBtn');
+    const saveCodeBtn = document.getElementById('saveCodeBtn');
+    const runTesterBtn = document.getElementById('runTesterBtn');
+    const runMainBtn = document.getElementById('runMainBtn');
+
+    async function request(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur API');
+      }
+      return data;
+    }
+
+    function displaylaby(laby, currentPos = null) {
+      const rows = laby.length;
+      const cols = laby[0]?.length || 0;
+      mazeEl.style.gridTemplateColumns = `repeat(${cols}, 22px)`;
+      mazeEl.innerHTML = '';
+
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          const value = laby[i][j];
+
+          if (currentPos && currentPos[0] === i && currentPos[1] === j) {
+            cell.classList.add('cell-player');
+            cell.textContent = 'P';
+          } else if (value === '#') {
+            cell.classList.add('cell-wall');
+          } else if (value === 'S' || value === 'P') {
+            cell.classList.add('cell-start');
+            cell.textContent = 'S';
+          } else if (value === 'O') {
+            cell.classList.add('cell-goal');
+            cell.textContent = 'O';
+          } else {
+            cell.classList.add('cell-space');
+          }
+
+          mazeEl.appendChild(cell);
+        }
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function loadMaze() {
+      try {
+        const data = await request('/api/maze');
+        displaylaby(data.maze);
+        outputArea.value = 'Maze loaded successfully.';
+      } catch (error) {
+        outputArea.value = `Failed to load maze: ${error.message}`;
+      }
+    }
+
+    async function loadCode() {
+      try {
+        const data = await request('/api/code');
+        codeArea.value = data.content;
+        outputArea.value = 'Code loaded successfully.';
+      } catch (error) {
+        outputArea.value = `Failed to load code: ${error.message}`;
+      }
+    }
+
+    async function saveCode() {
+      try {
+        await request('/api/code', {
+          method: 'PUT',
+          body: JSON.stringify({ content: codeArea.value }),
+        });
+        outputArea.value = 'Code saved to maze.json.';
+      } catch (error) {
+        outputArea.value = `Save failed: ${error.message}`;
+      }
+    }
+
+    function highlightLine(lineNumber) {
+      const lines = codeArea.value.split('\n');
+      let start = 0;
+      for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+        start += lines[i].length + 1;
+      }
+      const end = start + ((lines[lineNumber - 1] || '').length);
+      codeArea.focus();
+      codeArea.setSelectionRange(start, end);
+    }
+
+    async function runTester() {
+      try {
+        const response = await fetch('/api/run-tester', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: codeArea.value }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur API');
+        }
+
+        const mazeData = await request('/api/maze');
+        const laby = mazeData.maze;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let newlineIndex;
+
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            const chunk = buffer.slice(0, newlineIndex).trim();
+            buffer = buffer.slice(newlineIndex + 1);
+            if (!chunk) continue;
+            const event = JSON.parse(chunk);
+            if (event.type === 'trace') {
+              displaylaby(laby, event.position);
+              outputArea.value = `Ligne ${event.lineno}: ${event.line}`;
+              highlightLine(event.lineno);
+              await sleep(150);
+            } else if (event.type === 'done') {
+              outputArea.value = `${event.status}: ${event.message}`;
+              displaylaby(laby, event.current);
+            }
+          }
+        }
+      } catch (error) {
+        outputArea.value = `Execution failed: ${error.message}`;
+      }
+    }
+
+    async function runMain() {
+      try {
+        const data = await request('/api/run-main', { method: 'POST' });
+        outputArea.value = `STDOUT:\n${data.stdout}\nSTDERR:\n${data.stderr}`;
+      } catch (error) {
+        outputArea.value = `Main execution failed: ${error.message}`;
+      }
+    }
+
+    loadMazeBtn.addEventListener('click', loadMaze);
+    loadCodeBtn.addEventListener('click', loadCode);
+    saveCodeBtn.addEventListener('click', saveCode);
+    runTesterBtn.addEventListener('click', runTester);
+    runMainBtn.addEventListener('click', runMain);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadMaze();
+      loadCode();
+    });
+  </script>
+</body>
+</html>
