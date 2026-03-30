@@ -1,38 +1,55 @@
 import sys
 import time
 
+
 def display_laby(laby, current_pos):
-    symbols = {" ": ' ', "#": '#', 'S' : 'S', 'O': 'O'}
+    symbols = {" ": ' ', "#": '#', 'S': 'S', 'O': 'O'}
     for i in range(len(laby)):
         row = ""
         for j in range(len(laby[i])):
             if (i, j) == current_pos:
                 row += "P"
             else:
-                row += symbols.get(laby[i][j], 'S ')
+                row += symbols.get(laby[i][j], ' ')
         print(row)
 
-def tester(code, laby, return_history=False):
-    if not laby:
-        message = "Labyrinthe vide"
-        if return_history:
-            return {'error': message, 'history': [], 'current': None}
-        print(f"✗ {message}")
-        return
 
-    start = None
+def _find_start(laby):
     for i in range(len(laby)):
         for j in range(len(laby[i])):
             if laby[i][j] in ('S', 'P'):
-                start = (i, j)
-                break
-        if start is not None:
-            break
+                return (i, j)
+    return None
+
+
+def tester(code, laby, return_history=False, exec_globals=None):
+    if not laby:
+        message = "Labyrinthe vide"
+        if return_history:
+            return {
+                'error': message,
+                'history': [],
+                'trace': [],
+                'current': None,
+                'status': 'failed',
+                'message': message,
+            }
+        print(f"✗ {message}")
+        return
+
+    start = _find_start(laby)
 
     if start is None:
         message = "Depart introuvable (case 2 ou 4)"
         if return_history:
-            return {'error': message, 'history': [], 'current': None}
+            return {
+                'error': message,
+                'history': [],
+                'trace': [],
+                'current': None,
+                'status': 'failed',
+                'message': message,
+            }
         print(f"✗ {message}")
         return
 
@@ -80,7 +97,10 @@ def tester(code, laby, return_history=False):
     error = None
     try:
         sys.settrace(tracer)
-        exec(code, {'laby': laby, 'move': move})
+        globals_scope = {'laby': laby, 'move': move}
+        if isinstance(exec_globals, dict):
+            globals_scope.update(exec_globals)
+        exec(code, globals_scope)
     except Exception as exc:
         error = f"Erreur pendant l'execution: {exc}"
     finally:
@@ -88,8 +108,12 @@ def tester(code, laby, return_history=False):
 
     if return_history:
         x, y = current_pos[0]
-        status = 'success' if laby[x][y] == 'O' else 'failed'
-        message = 'Arrivee atteinte' if status == 'success' else f"Arrivee non atteinte. Position finale: {current_pos[0]}"
+        if error:
+            status = 'failed'
+            message = error
+        else:
+            status = 'success' if laby[x][y] == 'O' else 'failed'
+            message = 'Arrivee atteinte' if status == 'success' else f"Arrivee non atteinte. Position finale: {current_pos[0]}"
         result = {
             'error': error,
             'history': history,
