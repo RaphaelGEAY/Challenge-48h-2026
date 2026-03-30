@@ -181,7 +181,6 @@
         window.location.href = "dashboard.html";
       }, 700);
     } catch (_error) {
-      // Ignore auto-check errors when backend is not running.
     }
   }
 

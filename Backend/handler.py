@@ -25,6 +25,9 @@ from .sessions import cleanup_sessions, create_session, destroy_session, get_ses
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
+def clamp(value: float, min_value: float, max_value: float) -> float:
+    return max(min_value, min(max_value, value))
+
 
 class AuthRequestHandler(BaseHTTPRequestHandler):
     server_version = "CodeArenaAuth/1.0"
@@ -50,6 +53,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             self._handle_me()
             return
 
+        if path == "/api/dashboard/me":
+            self._handle_dashboard_me()
+            return
+
         if path == "/api/health":
             self._send_json(HTTPStatus.OK, {"ok": True, "status": "healthy"})
             return
@@ -70,6 +77,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/auth/logout":
             self._handle_logout()
+            return
+
+        if path == "/api/attempts":
+            self._handle_create_attempt()
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Route not found"})
@@ -252,6 +263,169 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             HTTPStatus.OK,
             {"ok": True, "message": "Deconnexion reussie."},
             headers=[("Set-Cookie", self._build_cleared_session_cookie())],
+        )
+
+    def _require_user_id(self) -> Optional[int]:
+        token = self._session_token_from_cookie()
+        user_id = get_session_user_id(token)
+        if not user_id:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"ok": False, "error": "Non authentifie."})
+            return None
+        return user_id
+
+    def _handle_create_attempt(self) -> None:
+        user_id = self._require_user_id()
+        if user_id is None:
+            return
+
+        body, error = self._read_json_body()
+        if error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": error})
+            return
+
+        try:
+            challenge_id = int(body.get("challenge_id"))
+        except (TypeError, ValueError):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "challenge_id invalide."})
+            return
+
+        status = str(body.get("status", "")).strip().lower()
+        if status not in {"passed", "partial", "failed"}:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "status invalide (attendu: passed, partial, failed)."},
+            )
+            return
+
+        def to_int(key: str, default: int = 0) -> int:
+            try:
+                return int(body.get(key, default))
+            except (TypeError, ValueError):
+                return default
+
+        tests_passed = max(0, to_int("tests_passed", 0))
+        tests_total = max(0, to_int("tests_total", 0))
+        time_seconds = max(0, to_int("time_seconds", 0))
+        xp_delta = to_int("xp_delta", 0)
+
+        with db_connection() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO attempts (
+                    user_id, challenge_id, status, tests_passed, tests_total, time_seconds, xp_delta, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (user_id, challenge_id, status, tests_passed, tests_total, time_seconds, xp_delta, utc_now_iso()),
+            )
+            conn.commit()
+            attempt_id = cursor.lastrowid
+
+        self._send_json(
+            HTTPStatus.CREATED,
+            {
+                "ok": True,
+                "attempt": {
+                    "id": int(attempt_id) if attempt_id is not None else None,
+                    "challenge_id": challenge_id,
+                    "status": status,
+                    "tests_passed": tests_passed,
+                    "tests_total": tests_total,
+                    "time_seconds": time_seconds,
+                    "xp_delta": xp_delta,
+                },
+            },
+        )
+
+    def _handle_dashboard_me(self) -> None:
+        user_id = self._require_user_id()
+        if user_id is None:
+            return
+
+        with db_connection() as conn:
+            user = conn.execute(
+                "SELECT id, username, email, created_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            attempts = conn.execute(
+                """
+                SELECT challenge_id, status, tests_passed, tests_total, time_seconds, xp_delta, created_at
+                FROM attempts
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT 20
+                """,
+                (user_id,),
+            ).fetchall()
+
+        attempts_payload: List[Dict[str, Any]] = []
+        total_tests_passed = 0
+        total_tests = 0
+        xp_total = 0
+        passed_count = 0
+        partial_count = 0
+        failed_count = 0
+
+        for row in attempts:
+            status = str(row["status"])
+            if status == "passed":
+                passed_count += 1
+            elif status == "partial":
+                partial_count += 1
+            else:
+                failed_count += 1
+
+            tp = int(row["tests_passed"] or 0)
+            tt = int(row["tests_total"] or 0)
+            total_tests_passed += max(0, tp)
+            total_tests += max(0, tt)
+            xp_total += int(row["xp_delta"] or 0)
+
+            attempts_payload.append(
+                {
+                    "challengeId": int(row["challenge_id"]),
+                    "status": status,
+                    "testsPassed": int(row["tests_passed"]),
+                    "testsTotal": int(row["tests_total"]),
+                    "timeSeconds": int(row["time_seconds"]),
+                    "xp": int(row["xp_delta"]),
+                    "createdAt": str(row["created_at"]),
+                }
+            )
+
+        accuracy = 0.0
+        if total_tests > 0:
+            accuracy = (total_tests_passed / total_tests) * 100.0
+
+        total_attempts = passed_count + partial_count + failed_count
+        base = 0.0 if total_attempts == 0 else (passed_count + 0.5 * partial_count) / total_attempts
+        progress = {
+            "arrays": round(base * 100.0),
+            "strings": round(clamp(base * 100.0 + 8.0, 0.0, 100.0)),
+            "conditionals": round(clamp(base * 100.0 + 18.0, 0.0, 100.0)),
+        }
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "user": {
+                    "id": int(user["id"]) if user else user_id,
+                    "username": str(user["username"]) if user else "",
+                    "email": str(user["email"]) if user else "",
+                    "created_at": str(user["created_at"]) if user else "",
+                },
+                "stats": {
+                    "xpTotal": xp_total,
+                    "attemptsTotal": total_attempts,
+                    "passed": passed_count,
+                    "partial": partial_count,
+                    "failed": failed_count,
+                    "accuracy": accuracy,
+                },
+                "progress": progress,
+                "attempts": attempts_payload,
+            },
         )
 
     def _serve_static(self, path: str) -> None:

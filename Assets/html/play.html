@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play - CodeArena</title>
+    <title>Run - CodeArena</title>
     <link rel="stylesheet" href="../css/play.css" />
   </head>
   <body>
@@ -15,7 +15,7 @@
           <span class="brand-mark" aria-hidden="true"></span>
           <span>
             <span class="brand-text">CodeArena</span>
-            <span class="brand-sub">Daily coding challenges</span>
+            <span class="brand-sub">Daily efficiency challenges</span>
           </span>
         </a>
 
@@ -40,39 +40,39 @@
       <div class="container">
         <section class="game-head">
           <div class="left">
-            <h1 class="reveal delay-1">Challenge #21</h1>
+            <h1 class="reveal delay-1">Run #21</h1>
             <p class="subline reveal delay-2">
-              Write a function that transforms input data into a normalized list.
+              Clear the objective using as few moves as possible, with maximum accuracy.
             </p>
           </div>
 
-          <div class="pill-row reveal delay-3" aria-label="Challenge status">
+          <div class="pill-row reveal delay-3" aria-label="Run status">
             <div class="pill">
               <span class="icon-dot" aria-hidden="true"></span>
               Time: 03:12
             </div>
             <div class="pill warn">
               <span class="icon-dot" aria-hidden="true"></span>
-              Tests running
+              Scoring…
             </div>
           </div>
         </section>
 
         <section class="game-shell">
           <aside class="panel side left-side reveal delay-1">
-            <h2>Instructions</h2>
+            <h2>Objective</h2>
             <p>
-              You are given an array of objects. Return a new array containing only entries that
-              match the rules, and map them into a simpler shape.
+              Your job is to complete the task efficiently: fewer wasted actions, fewer mistakes, and
+              cleaner execution.
             </p>
             <ul>
-              <li>Keep order stable</li>
-              <li>Remove invalid entries</li>
-              <li>Return normalized values</li>
+              <li>Spend fewer moves</li>
+              <li>Avoid errors</li>
+              <li>Finish clean</li>
             </ul>
 
             <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height:1.6;">
-              Use the hints on the right when you get stuck.
+              Use the hints on the right when you start bleeding time.
             </div>
           </aside>
 
@@ -84,30 +84,25 @@
                   <span class="dot"></span>
                   <span class="dot"></span>
                 </div>
-                <div class="file-name">solution.js</div>
+                <div class="file-name">run_plan.txt</div>
               </div>
               <div class="toolbar-actions">
-                <button class="mini-btn" type="button">Format</button>
-                <button class="mini-btn" type="button">Reset</button>
+                <button class="mini-btn" type="button">Optimize</button>
+                <button class="mini-btn" type="button">Restart</button>
               </div>
             </div>
 
             <div class="code-area">
-              <pre class="code" aria-label="Code editor mock">
-<code><span>// Normalize input data</span>
-function normalize(items) {
-  const out = [];
-  for (let i = 0; i &lt; items.length; i++) {
-    const it = items[i];
-    if (!it || it.isValid !== true) continue;
+              <pre class="code" aria-label="Run plan mock">
+<code><span>// Plan your run (efficiency matters)</span>
+1) Read the objective carefully.
+2) Choose the shortest safe path.
+3) Avoid retries — they cost distance.
 
-    <span class="cursor-line">out.push({ id: it.id, name: String(it.name).trim() });</span>
-  }
-  return out;
-}</code></pre>
+<span class="cursor-line">Result: fewer moves, higher accuracy, more progress.</span></code></pre>
 
               <div class="play-actions">
-                <button class="btn btn-primary" type="button">Run tests</button>
+                <button class="btn btn-primary" type="button">Score run</button>
                 <button class="btn" type="button">Submit</button>
                 <a class="btn btn-ghost" href="dashboard.html">Back to dashboard</a>
               </div>
@@ -117,37 +112,37 @@ function normalize(items) {
                   <strong>Console</strong>
                   <div class="status">
                     <span class="spinner" aria-hidden="true"></span>
-                    <span>Waiting for output…</span>
+                    <span>Waiting for results…</span>
                   </div>
                 </div>
                 <pre>
-<span class="ok">✔ Compiled successfully</span>
-<span class="err">✖ 1 test failed</span>
-Hint: check filtering + mapping shape.
+<span class="ok">✔ Run completed</span>
+<span class="err">✖ Efficiency penalty applied</span>
+Hint: reduce retries and tighten your path.
 </pre>
               </div>
             </div>
           </div>
 
           <aside class="panel side right-side reveal delay-3">
-            <h2>Hints</h2>
+            <h2>Efficiency hints</h2>
             <div class="hint-grid">
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Filter first</strong>
-                <p>Skip invalid entries before you push into the result array.</p>
+                <strong><i aria-hidden="true"></i>Cut waste</strong>
+                <p>Remove steps that don’t change the outcome.</p>
               </div>
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Normalize values</strong>
-                <p>Trim strings and convert values into the expected types.</p>
+                <strong><i aria-hidden="true"></i>Stay accurate</strong>
+                <p>One mistake can cost more distance than one slow move.</p>
               </div>
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Preserve order</strong>
-                <p>Iterate left-to-right and only add matching items.</p>
+                <strong><i aria-hidden="true"></i>Pick a route</strong>
+                <p>Choose the simplest path you can execute consistently.</p>
               </div>
             </div>
 
             <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height: 1.6;">
-              Your next improvement: reduce failing edge cases.
+              Your next improvement: reduce retries and tighten the plan.
             </div>
           </aside>
         </section>

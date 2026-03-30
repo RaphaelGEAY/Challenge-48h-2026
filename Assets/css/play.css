@@ -167,7 +167,6 @@
   min-height: 330px;
 }
 
-/* Animated cursor line (purely decorative) */
 .code .cursor-line{
   position:relative;
 }

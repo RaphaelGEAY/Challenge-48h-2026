@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Leaderboard - CodeArena</title>
+    <title>Rankings - CodeArena</title>
     <link rel="stylesheet" href="../css/leaderboard.css" />
   </head>
   <body>
@@ -15,7 +15,7 @@
           <span class="brand-mark" aria-hidden="true"></span>
           <span>
             <span class="brand-text">CodeArena</span>
-            <span class="brand-sub">Daily coding challenges</span>
+            <span class="brand-sub">Daily efficiency challenges</span>
           </span>
         </a>
 
@@ -40,8 +40,8 @@
       <div class="container">
         <div class="board-head">
           <div>
-            <h1 class="reveal delay-1">Leaderboard</h1>
-            <p class="reveal delay-2">Top players based on points. (Static demo data for now.)</p>
+            <h1 class="reveal delay-1">Rankings</h1>
+            <p class="reveal delay-2">Top players based on efficiency score. (Static demo data for now.)</p>
           </div>
           <div class="chips reveal delay-3" aria-label="Leaderboard filters">
             <button class="chip" type="button">All time</button>
@@ -88,18 +88,18 @@
             </div>
 
             <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height: 1.6;">
-              Tip: run more tests in less time to maximize points per minute.
+              Tip: fewer retries + higher accuracy = faster climbs.
             </div>
           </aside>
 
           <div class="panel table-wrap reveal delay-2">
-            <table aria-label="Leaderboard table">
+            <table aria-label="Rankings table">
               <thead>
                 <tr>
                   <th style="width:90px;">Rank</th>
                   <th>Player</th>
-                  <th style="width:160px;">Score</th>
-                  <th style="width:160px;">Win rate</th>
+                  <th style="width:160px;">Efficiency</th>
+                  <th style="width:160px;">Accuracy</th>
                 </tr>
               </thead>
               <tbody>
@@ -174,7 +174,7 @@
       <div class="container footer-inner">
         <div>
           <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
-          <div style="margin-top:6px;">Climb one challenge at a time.</div>
+          <div style="margin-top:6px;">Climb one run at a time.</div>
         </div>
         <div>
           <a href="play.html">Play</a> &nbsp;|&nbsp; <a href="dashboard.html">Dashboard</a>

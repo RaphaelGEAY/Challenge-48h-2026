@@ -15,7 +15,7 @@
           <span class="brand-mark" aria-hidden="true"></span>
           <span>
             <span class="brand-text">CodeArena</span>
-            <span class="brand-sub">Daily coding challenges</span>
+            <span class="brand-sub">Daily efficiency challenges</span>
           </span>
         </a>
 
@@ -40,10 +40,12 @@
       <div class="container">
         <div class="page-title">
           <div>
-            <h1 class="reveal delay-1">Your dashboard</h1>
-            <p class="reveal delay-2">Track progress, review attempts, and jump back into the next challenge.</p>
+            <h1 class="reveal delay-1">Your run stats</h1>
+            <p id="dash-user-subtitle" class="reveal delay-2">
+              See how efficiently you moved, how accurate you were, and how far you advanced.
+            </p>
           </div>
-          <a class="btn btn-primary reveal delay-3" href="play.html">Continue playing</a>
+          <a class="btn btn-primary reveal delay-3" href="play.html">Start another run</a>
         </div>
 
         <section class="stats-grid">
@@ -52,81 +54,82 @@
               <span class="chip">Rank</span>
               <span class="mono muted">#128</span>
             </div>
-            <strong>128</strong>
-            <span>Keep solving to climb faster.</span>
+            <strong id="dash-rank-value">128</strong>
+              <span>Climb by finishing runs efficiently.</span>
           </article>
 
           <article class="card stat-card reveal delay-2">
             <div class="stat-top">
               <span class="chip">Streak</span>
-              <span class="mono muted">6 days</span>
+              <span id="dash-streak-label" class="mono muted">6 days</span>
             </div>
-            <strong>6</strong>
-            <span>Consistent reps beat perfect sessions.</span>
+            <strong id="dash-streak-value">6</strong>
+              <span>Consistency pushes you farther than flashy runs.</span>
           </article>
 
           <article class="card stat-card reveal delay-3">
             <div class="stat-top">
               <span class="chip">XP</span>
-              <span class="mono muted">Today</span>
+              <span id="dash-xp-label" class="mono muted">Today</span>
             </div>
-            <strong>340</strong>
-            <span>Momentum looks good.</span>
+            <strong id="dash-xp-value">340</strong>
+              <span>Clean runs build momentum.</span>
           </article>
 
           <article class="card stat-card reveal delay-4">
             <div class="stat-top">
               <span class="chip">Accuracy</span>
-              <span class="mono muted">92%</span>
+              <span id="dash-accuracy-label" class="mono muted">92%</span>
             </div>
-            <strong>92%</strong>
-            <span>Fewer wrong runs, quicker wins.</span>
+            <strong id="dash-accuracy-value">92%</strong>
+              <span>Fewer mistakes, more distance.</span>
           </article>
         </section>
 
         <section class="dashboard-grid">
           <div class="card reveal delay-2" style="padding:18px;">
-            <h3 style="margin:0 0 10px;">Progress overview</h3>
+            <h3 style="margin:0 0 10px;">Distance overview</h3>
             <div class="progress-wrap">
               <div>
                 <div class="progress-row">
-                  <span class="label">Arrays & loops</span>
-                  <span class="pct">72%</span>
+              <span id="dash-progress-arrays-label" class="label">Route A</span>
+                  <span id="dash-progress-arrays-pct" class="pct">72%</span>
                 </div>
                 <div class="bar" aria-label="Arrays and loops progress">
-                  <i style="--w:72%"></i>
+                  <i id="dash-progress-arrays-bar" style="--w:72%"></i>
                 </div>
               </div>
 
               <div>
                 <div class="progress-row">
-                  <span class="label">Strings</span>
-                  <span class="pct">58%</span>
+                  <span id="dash-progress-strings-label" class="label">Route B</span>
+                  <span id="dash-progress-strings-pct" class="pct">58%</span>
                 </div>
                 <div class="bar" aria-label="Strings progress">
-                  <i style="--w:58%"></i>
+                  <i id="dash-progress-strings-bar" style="--w:58%"></i>
                 </div>
               </div>
 
               <div>
                 <div class="progress-row">
-                  <span class="label">Conditionals</span>
-                  <span class="pct">81%</span>
+                  <span id="dash-progress-conditionals-label" class="label">Route C</span>
+                  <span id="dash-progress-conditionals-pct" class="pct">81%</span>
                 </div>
                 <div class="bar" aria-label="Conditionals progress">
-                  <i style="--w:81%"></i>
+                  <i id="dash-progress-conditionals-bar" style="--w:81%"></i>
                 </div>
               </div>
             </div>
 
             <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height:1.6;">
-              Tip: aim for quick iterations. Use the play screen’s console panel to narrow down issues.
+              Tip: cut retries first. Big gains come from fewer wasted actions, not tiny optimizations.
             </div>
           </div>
 
           <aside class="card reveal delay-3">
-            <h3 style="margin:0 0 12px;">Recent attempts</h3>
-            <div class="attempts">
+            <h3 style="margin:0 0 12px;">Recent runs</h3>
+            <div id="dash-attempts" class="attempts">
+              <!-- Fallback static attempts (replaced by JS if it can load data) -->
               <div class="attempt">
                 <div class="top">
                   <strong>Challenge #19</strong>
@@ -134,7 +137,7 @@
                 </div>
                 <div class="meta">
                   <span>Time: <span class="mono">00:42</span></span>
-                  <span>Tests: <span class="mono">12/12</span></span>
+                  <span>Checks: <span class="mono">12/12</span></span>
                   <span>XP: <span class="mono">+80</span></span>
                 </div>
               </div>
@@ -146,7 +149,7 @@
                 </div>
                 <div class="meta">
                   <span>Time: <span class="mono">01:10</span></span>
-                  <span>Tests: <span class="mono">9/12</span></span>
+                  <span>Checks: <span class="mono">9/12</span></span>
                   <span>XP: <span class="mono">+35</span></span>
                 </div>
               </div>
@@ -158,7 +161,7 @@
                 </div>
                 <div class="meta">
                   <span>Time: <span class="mono">00:27</span></span>
-                  <span>Tests: <span class="mono">2/12</span></span>
+                  <span>Checks: <span class="mono">2/12</span></span>
                   <span>XP: <span class="mono">+10</span></span>
                 </div>
               </div>
@@ -172,13 +175,15 @@
       <div class="container footer-inner">
         <div>
           <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
-          <div style="margin-top:6px;">Keep your streak alive.</div>
+          <div style="margin-top:6px;">Go farther with cleaner runs.</div>
         </div>
         <div>
           <a href="play.html">Play</a> &nbsp;|&nbsp; <a href="leaderboard.html">Leaderboard</a>
         </div>
       </div>
     </footer>
+
+    <script defer src="../js/dashboard.js"></script>
   </body>
 </html>
 
