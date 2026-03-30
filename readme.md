@@ -26,12 +26,16 @@ Ouvrir:
 
 `http://127.0.0.1:5000/Assets/html/login.html`
 
+`http://127.0.0.1:5000/Assets/html/account.html`
+
 ## Endpoints disponibles
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `POST /api/auth/logout`
+- `POST /api/account/update`
+- `GET /api/dashboard/me`
 - `GET /api/health`
 
 ## Format JSON
@@ -40,10 +44,11 @@ Ouvrir:
 
 ```
 {
+  "first_name": "Raphael",
+  "last_name": "Martin",
   "username": "CodeNinja42",
   "email": "you@example.com",
-  "password": "super-secret-password",
-  "remember": true
+  "password": "super-secret-password"
 }
 ```
 
@@ -52,7 +57,19 @@ Ouvrir:
 ```
 {
   "email": "you@example.com",
-  "password": "super-secret-password",
-  "remember": true
+  "password": "super-secret-password"
+}
+```
+
+### Update account
+
+```
+{
+  "first_name": "Raphael",
+  "last_name": "Martin",
+  "username": "CodeNinja42",
+  "email": "you@example.com",
+  "current_password": "old-password-if-changing",
+  "new_password": "new-password-or-empty"
 }
 ```

@@ -58,6 +58,32 @@
         </div>
 
         <form action="#" method="post" aria-label="Sign in form" id="auth-form" novalidate>
+          <div class="register-grid is-hidden" id="identity-fields">
+            <div class="field">
+              <label for="first_name">Prenom</label>
+              <input
+                class="input"
+                id="first_name"
+                name="first_name"
+                type="text"
+                placeholder="Raphael"
+                autocomplete="given-name"
+              />
+            </div>
+
+            <div class="field">
+              <label for="last_name">Nom</label>
+              <input
+                class="input"
+                id="last_name"
+                name="last_name"
+                type="text"
+                placeholder="Dupont"
+                autocomplete="family-name"
+              />
+            </div>
+          </div>
+
           <div class="field is-hidden" id="username-field">
             <label for="username">Username</label>
             <input
@@ -96,20 +122,10 @@
             />
           </div>
 
-          <div class="row">
-            <label class="check">
-              <input type="checkbox" name="remember" />
-              Remember me
-            </label>
-            <a class="link" href="#">Forgot password?</a>
-          </div>
-
           <div class="status is-hidden" id="auth-status" aria-live="polite"></div>
 
           <div class="auth-actions">
             <button class="btn btn-primary" type="submit" id="submit-button">Sign in</button>
-            <button class="btn btn-ghost" type="button" id="switch-mode">Create account</button>
-            <a class="btn btn-ghost" href="play.html">Play as guest</a>
           </div>
 
           <div class="fineprint">

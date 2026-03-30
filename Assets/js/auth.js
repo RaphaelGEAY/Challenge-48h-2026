@@ -6,14 +6,33 @@
 
   const modeLoginButton = document.getElementById("mode-login");
   const modeRegisterButton = document.getElementById("mode-register");
-  const switchModeButton = document.getElementById("switch-mode");
   const submitButton = document.getElementById("submit-button");
   const description = document.getElementById("auth-description");
   const status = document.getElementById("auth-status");
+  const identityFields = document.getElementById("identity-fields");
+  const firstNameInput = document.getElementById("first_name");
+  const lastNameInput = document.getElementById("last_name");
   const usernameField = document.getElementById("username-field");
   const usernameInput = document.getElementById("username");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
+
+  if (
+    !modeLoginButton ||
+    !modeRegisterButton ||
+    !submitButton ||
+    !description ||
+    !status ||
+    !identityFields ||
+    !firstNameInput ||
+    !lastNameInput ||
+    !usernameField ||
+    !usernameInput ||
+    !emailInput ||
+    !passwordInput
+  ) {
+    return;
+  }
 
   const state = {
     mode: "login",
@@ -44,9 +63,13 @@
   function setLoading(loading) {
     state.loading = loading;
     submitButton.disabled = loading;
-    switchModeButton.disabled = loading;
     modeLoginButton.disabled = loading;
     modeRegisterButton.disabled = loading;
+    if (loading) {
+      submitButton.textContent = state.mode === "register" ? "Creating account..." : "Signing in...";
+    } else {
+      submitButton.textContent = state.mode === "register" ? "Register" : "Sign in";
+    }
   }
 
   function setMode(mode) {
@@ -62,14 +85,23 @@
     modeLoginButton.setAttribute("aria-selected", String(!isRegister));
     modeRegisterButton.setAttribute("aria-selected", String(isRegister));
 
+    identityFields.classList.toggle("is-hidden", !isRegister);
+    firstNameInput.required = isRegister;
+    lastNameInput.required = isRegister;
+
     usernameField.classList.toggle("is-hidden", !isRegister);
     usernameInput.required = isRegister;
 
-    submitButton.textContent = isRegister ? "Create account" : "Sign in";
-    switchModeButton.textContent = isRegister ? "I already have an account" : "Create account";
+    submitButton.textContent = isRegister ? "Register" : "Sign in";
     description.textContent = isRegister
       ? "Cree un compte pour sauvegarder ta progression automatiquement."
       : "Connecte-toi pour sauvegarder ta progression et apparaitre dans le leaderboard.";
+
+    if (!isRegister) {
+      firstNameInput.value = "";
+      lastNameInput.value = "";
+      usernameInput.value = "";
+    }
 
     setStatus("");
   }
@@ -78,10 +110,11 @@
     const payload = {
       email: emailInput.value.trim(),
       password: passwordInput.value,
-      remember: Boolean(form.elements.remember && form.elements.remember.checked),
     };
 
     if (state.mode === "register") {
+      payload.first_name = firstNameInput.value.trim();
+      payload.last_name = lastNameInput.value.trim();
       payload.username = usernameInput.value.trim();
     }
 
@@ -110,6 +143,11 @@
 
     if (state.mode === "register" && !payload.username) {
       setStatus("Le pseudo est obligatoire pour creer un compte.", "error");
+      return;
+    }
+
+    if (state.mode === "register" && (!payload.first_name || !payload.last_name)) {
+      setStatus("Le prenom et le nom sont obligatoires pour creer un compte.", "error");
       return;
     }
 
@@ -190,10 +228,6 @@
 
   modeRegisterButton.addEventListener("click", function () {
     setMode("register");
-  });
-
-  switchModeButton.addEventListener("click", function () {
-    setMode(state.mode === "login" ? "register" : "login");
   });
 
   form.addEventListener("submit", submitAuth);

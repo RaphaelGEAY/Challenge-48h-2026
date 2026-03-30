@@ -1,0 +1,188 @@
+@import url("./index.css");
+
+.page-title{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 12px;
+  margin: 6px 0 16px;
+}
+
+.page-title h1{
+  margin:0;
+  font-size: 26px;
+  letter-spacing:-.4px;
+}
+
+.page-title p{
+  margin:0;
+  color: var(--muted2);
+  font-size: 13px;
+}
+
+.account-locked,
+.account-editor{
+  padding: 22px;
+}
+
+.account-locked h2{
+  margin:0;
+  font-size: 18px;
+}
+
+.account-locked p{
+  margin:8px 0 14px;
+  color: var(--muted2);
+  font-size: 13px;
+}
+
+.field-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-block h2{
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -.2px;
+}
+
+.block-sub{
+  margin: 6px 0 12px;
+  color: var(--muted2);
+  font-size: 12px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+.field label{
+  color: rgba(234,240,255,.84);
+  font-weight: 720;
+  font-size: 13px;
+}
+
+.input{
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 0 14px;
+  font-size: 14px;
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.input::placeholder{ color: rgba(234,240,255,.38); }
+
+.input:focus{
+  outline:none;
+  border-color: rgba(51,214,255,.55);
+  background: rgba(255,255,255,.06);
+}
+
+.separator{
+  height: 1px;
+  background: rgba(255,255,255,.12);
+  margin: 18px 0;
+}
+
+.status{
+  margin-top: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255,255,255,.04);
+}
+
+.status.is-error{
+  color: #FFD0D8;
+  border-color: rgba(255,77,109,.45);
+  background: rgba(255,77,109,.15);
+}
+
+.status.is-success{
+  color: #C6FFE7;
+  border-color: rgba(46,229,157,.42);
+  background: rgba(46,229,157,.14);
+}
+
+.account-actions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top: 16px;
+}
+
+.account-session{
+  margin-top: 12px;
+  padding: 18px 22px;
+  border-color: rgba(255,77,109,.3);
+  background: linear-gradient(180deg, rgba(255,77,109,.12), rgba(255,255,255,.04));
+}
+
+.account-session h2{
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -.2px;
+}
+
+.account-session p{
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.account-session-actions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top: 12px;
+}
+
+.account-session-actions .btn{
+  min-width: 190px;
+}
+
+.btn.btn-danger{
+  border-color: rgba(255,77,109,.45);
+  background: rgba(255,77,109,.16);
+  color: #FFD0D8;
+}
+
+.btn.btn-danger:hover{
+  background: rgba(255,77,109,.24);
+  border-color: rgba(255,77,109,.6);
+}
+
+.btn:disabled{
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+.is-hidden{
+  display:none !important;
+}
+
+@media (max-width: 920px){
+  .field-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .account-actions{
+    width:100%;
+  }
+
+  .account-actions .btn{
+    width:100%;
+  }
+
+  .account-session-actions .btn{
+    width:100%;
+    min-width: 0;
+  }
+}

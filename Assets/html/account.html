@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mon compte - CodeArena</title>
+    <link rel="stylesheet" href="../css/account.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-text">CodeArena</span>
+            <span class="brand-sub">Daily efficiency challenges</span>
+          </span>
+        </a>
+
+        <div class="nav-right">
+          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+          <label class="nav-burger" for="nav-toggle" aria-label="Toggle navigation">
+            <span aria-hidden="true"></span>
+          </label>
+
+          <nav class="nav-menu" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="play.html">Play</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="login.html" data-auth-link aria-current="page">Sign in</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" class="main">
+      <div class="container">
+        <div class="page-title">
+          <div>
+            <h1 class="reveal delay-1">Mon compte</h1>
+            <p class="reveal delay-2">Modifie tes informations de profil et ton mot de passe.</p>
+          </div>
+        </div>
+
+        <section id="account-locked" class="card account-locked reveal delay-2 is-hidden">
+          <h2>Connexion requise</h2>
+          <p>Tu dois etre connecte pour acceder a cette page.</p>
+          <a class="btn btn-primary" href="login.html">Aller a la connexion</a>
+        </section>
+
+        <section id="account-editor" class="card account-editor reveal delay-2 is-hidden">
+          <form id="account-form" novalidate>
+            <section class="form-block">
+              <h2>Informations personnelles</h2>
+              <p class="block-sub">Ces informations seront utilisees pour ton profil.</p>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="account-first-name">Prenom</label>
+                  <input class="input" id="account-first-name" name="first_name" type="text" autocomplete="given-name" required />
+                </div>
+
+                <div class="field">
+                  <label for="account-last-name">Nom</label>
+                  <input class="input" id="account-last-name" name="last_name" type="text" autocomplete="family-name" required />
+                </div>
+              </div>
+            </section>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="account-username">Username</label>
+                <input class="input" id="account-username" name="username" type="text" autocomplete="username" required />
+              </div>
+
+              <div class="field">
+                <label for="account-email">Email</label>
+                <input class="input" id="account-email" name="email" type="email" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <section class="form-block">
+              <h2>Securite</h2>
+              <p class="block-sub">Laisse vide si tu ne veux pas changer ton mot de passe.</p>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="account-current-password">Mot de passe actuel</label>
+                  <input
+                    class="input"
+                    id="account-current-password"
+                    name="current_password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Obligatoire seulement pour changer le mot de passe"
+                  />
+                </div>
+
+                <div class="field">
+                  <label for="account-new-password">Nouveau mot de passe</label>
+                  <input
+                    class="input"
+                    id="account-new-password"
+                    name="new_password"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Laisser vide pour ne pas changer"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <div class="status is-hidden" id="account-status" aria-live="polite"></div>
+
+            <div class="account-actions">
+              <button class="btn btn-primary" id="account-save-btn" type="submit">Enregistrer</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="account-logout-wrap" class="card account-session reveal delay-3 is-hidden" aria-label="Session">
+          <h2>Session</h2>
+          <p>Tu veux te deconnecter sur cet appareil ?</p>
+          <div class="account-session-actions">
+            <button class="btn btn-danger" id="account-logout-btn" type="button">Se deconnecter</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
+          <div style="margin-top:6px;">Account settings and security.</div>
+        </div>
+        <div>
+          <a href="dashboard.html">Dashboard</a> &nbsp;|&nbsp; <a href="play.html">Play</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../js/account-nav.js"></script>
+    <script src="../js/account.js"></script>
+  </body>
+</html>

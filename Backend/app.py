@@ -12,7 +12,7 @@ except ImportError:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="CodeArena auth backend")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
-    parser.add_argument("--port", type=int, default=5000, help="Port to bind")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind")
     return parser.parse_args()
 
 

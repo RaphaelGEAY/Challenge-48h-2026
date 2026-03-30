@@ -14,7 +14,6 @@ from .config import (
     DEFAULT_SESSION_SECONDS,
     HTML_SHORTCUTS,
     PASSWORD_MIN_LENGTH,
-    REMEMBER_SESSION_SECONDS,
     SESSION_COOKIE_NAME,
 )
 from .database import db_connection
@@ -27,6 +26,11 @@ def utc_now_iso() -> str:
 
 def clamp(value: float, min_value: float, max_value: float) -> float:
     return max(min_value, min(max_value, value))
+
+
+def is_valid_profile_name(value: str) -> bool:
+    trimmed = value.strip()
+    return 2 <= len(trimmed) <= 40
 
 
 class AuthRequestHandler(BaseHTTPRequestHandler):
@@ -83,6 +87,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             self._handle_create_attempt()
             return
 
+        if path == "/api/account/update":
+            self._handle_account_update()
+            return
+
         self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Route not found"})
 
     def _handle_register(self) -> None:
@@ -92,9 +100,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             return
 
         username = str(body.get("username", "")).strip()
+        first_name = str(body.get("first_name", "")).strip()
+        last_name = str(body.get("last_name", "")).strip()
         email = normalize_email(str(body.get("email", "")))
         password = str(body.get("password", ""))
-        remember = bool(body.get("remember", False))
 
         if len(username) < 3:
             self._send_json(
@@ -107,6 +116,20 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             self._send_json(
                 HTTPStatus.BAD_REQUEST,
                 {"ok": False, "error": "Le pseudo ne peut pas depasser 30 caracteres."},
+            )
+            return
+
+        if not is_valid_profile_name(first_name):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le prenom doit contenir entre 2 et 40 caracteres."},
+            )
+            return
+
+        if not is_valid_profile_name(last_name):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le nom doit contenir entre 2 et 40 caracteres."},
             )
             return
 
@@ -133,10 +156,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             with db_connection() as conn:
                 cursor = conn.execute(
                     """
-                    INSERT INTO users (username, email, password_hash, created_at)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO users (username, first_name, last_name, email, password_hash, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                    (username, email, password_hash, utc_now_iso()),
+                    (username, first_name, last_name, email, password_hash, utc_now_iso()),
                 )
                 conn.commit()
 
@@ -155,7 +178,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             )
             return
 
-        ttl = REMEMBER_SESSION_SECONDS if remember else DEFAULT_SESSION_SECONDS
+        ttl = DEFAULT_SESSION_SECONDS
         token = create_session(user_id, ttl)
 
         self._send_json(
@@ -163,7 +186,13 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             {
                 "ok": True,
                 "message": "Inscription reussie.",
-                "user": {"id": user_id, "username": username, "email": email},
+                "user": {
+                    "id": user_id,
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                },
             },
             headers=[("Set-Cookie", self._build_session_cookie(token, ttl))],
         )
@@ -176,7 +205,6 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
         email = normalize_email(str(body.get("email", "")))
         password = str(body.get("password", ""))
-        remember = bool(body.get("remember", False))
 
         if not email or not password:
             self._send_json(
@@ -188,7 +216,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         with db_connection() as conn:
             user = conn.execute(
                 """
-                SELECT id, username, email, password_hash
+                SELECT id, username, first_name, last_name, email, password_hash
                 FROM users
                 WHERE email = ?
                 """,
@@ -202,7 +230,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             )
             return
 
-        ttl = REMEMBER_SESSION_SECONDS if remember else DEFAULT_SESSION_SECONDS
+        ttl = DEFAULT_SESSION_SECONDS
         token = create_session(int(user["id"]), ttl)
 
         self._send_json(
@@ -213,6 +241,8 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                 "user": {
                     "id": int(user["id"]),
                     "username": str(user["username"]),
+                    "first_name": str(user["first_name"]),
+                    "last_name": str(user["last_name"]),
                     "email": str(user["email"]),
                 },
             },
@@ -230,7 +260,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         with db_connection() as conn:
             user = conn.execute(
                 """
-                SELECT id, username, email, created_at
+                SELECT id, username, first_name, last_name, email, created_at
                 FROM users
                 WHERE id = ?
                 """,
@@ -249,6 +279,8 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                 "user": {
                     "id": int(user["id"]),
                     "username": str(user["username"]),
+                    "first_name": str(user["first_name"]),
+                    "last_name": str(user["last_name"]),
                     "email": str(user["email"]),
                     "created_at": str(user["created_at"]),
                 },
@@ -263,6 +295,185 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             HTTPStatus.OK,
             {"ok": True, "message": "Deconnexion reussie."},
             headers=[("Set-Cookie", self._build_cleared_session_cookie())],
+        )
+
+    def _handle_account_update(self) -> None:
+        user_id = self._require_user_id()
+        if user_id is None:
+            return
+
+        body, error = self._read_json_body()
+        if error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": error})
+            return
+
+        username = str(body.get("username", "")).strip()
+        first_name = str(body.get("first_name", "")).strip()
+        last_name = str(body.get("last_name", "")).strip()
+        email = normalize_email(str(body.get("email", "")))
+        current_password = str(body.get("current_password", ""))
+        new_password = str(body.get("new_password", ""))
+
+        if len(username) < 3:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le pseudo doit contenir au moins 3 caracteres."},
+            )
+            return
+
+        if len(username) > 30:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le pseudo ne peut pas depasser 30 caracteres."},
+            )
+            return
+
+        if not is_valid_profile_name(first_name):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le prenom doit contenir entre 2 et 40 caracteres."},
+            )
+            return
+
+        if not is_valid_profile_name(last_name):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le nom doit contenir entre 2 et 40 caracteres."},
+            )
+            return
+
+        if not is_valid_email(email):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Adresse email invalide."},
+            )
+            return
+
+        with db_connection() as conn:
+            user = conn.execute(
+                "SELECT id, username, first_name, last_name, email, password_hash, created_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+
+            if not user:
+                self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Utilisateur introuvable."})
+                return
+
+            updates: Dict[str, Any] = {}
+
+            if username != str(user["username"]):
+                updates["username"] = username
+
+            if first_name != str(user["first_name"]):
+                updates["first_name"] = first_name
+
+            if last_name != str(user["last_name"]):
+                updates["last_name"] = last_name
+
+            if email != str(user["email"]):
+                updates["email"] = email
+
+            if new_password:
+                if len(new_password) < PASSWORD_MIN_LENGTH:
+                    self._send_json(
+                        HTTPStatus.BAD_REQUEST,
+                        {
+                            "ok": False,
+                            "error": f"Le mot de passe doit contenir au moins {PASSWORD_MIN_LENGTH} caracteres.",
+                        },
+                    )
+                    return
+
+                if not current_password:
+                    self._send_json(
+                        HTTPStatus.BAD_REQUEST,
+                        {"ok": False, "error": "Mot de passe actuel requis pour le changement."},
+                    )
+                    return
+
+                if not verify_password(current_password, str(user["password_hash"])):
+                    self._send_json(
+                        HTTPStatus.UNAUTHORIZED,
+                        {"ok": False, "error": "Mot de passe actuel invalide."},
+                    )
+                    return
+
+                updates["password_hash"] = hash_password(new_password)
+
+            if not updates:
+                self._send_json(
+                    HTTPStatus.OK,
+                    {
+                        "ok": True,
+                        "message": "Aucune modification detectee.",
+                        "user": {
+                            "id": int(user["id"]),
+                            "username": str(user["username"]),
+                            "first_name": str(user["first_name"]),
+                            "last_name": str(user["last_name"]),
+                            "email": str(user["email"]),
+                            "created_at": str(user["created_at"]),
+                        },
+                    },
+                )
+                return
+
+            set_clauses: List[str] = []
+            values: List[Any] = []
+            if "username" in updates:
+                set_clauses.append("username = ?")
+                values.append(updates["username"])
+            if "first_name" in updates:
+                set_clauses.append("first_name = ?")
+                values.append(updates["first_name"])
+            if "last_name" in updates:
+                set_clauses.append("last_name = ?")
+                values.append(updates["last_name"])
+            if "email" in updates:
+                set_clauses.append("email = ?")
+                values.append(updates["email"])
+            if "password_hash" in updates:
+                set_clauses.append("password_hash = ?")
+                values.append(updates["password_hash"])
+
+            values.append(user_id)
+
+            try:
+                conn.execute(
+                    f"UPDATE users SET {', '.join(set_clauses)} WHERE id = ?",
+                    values,
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                self._send_json(
+                    HTTPStatus.CONFLICT,
+                    {"ok": False, "error": "Un compte avec cet email existe deja."},
+                )
+                return
+
+            updated_user = conn.execute(
+                "SELECT id, username, first_name, last_name, email, created_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+
+        if not updated_user:
+            self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Utilisateur introuvable."})
+            return
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "message": "Parametres mis a jour.",
+                "user": {
+                    "id": int(updated_user["id"]),
+                    "username": str(updated_user["username"]),
+                    "first_name": str(updated_user["first_name"]),
+                    "last_name": str(updated_user["last_name"]),
+                    "email": str(updated_user["email"]),
+                    "created_at": str(updated_user["created_at"]),
+                },
+            },
         )
 
     def _require_user_id(self) -> Optional[int]:
@@ -344,7 +555,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
         with db_connection() as conn:
             user = conn.execute(
-                "SELECT id, username, email, created_at FROM users WHERE id = ?",
+                "SELECT id, username, first_name, last_name, email, created_at FROM users WHERE id = ?",
                 (user_id,),
             ).fetchone()
             attempts = conn.execute(
@@ -412,6 +623,8 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                 "user": {
                     "id": int(user["id"]) if user else user_id,
                     "username": str(user["username"]) if user else "",
+                    "first_name": str(user["first_name"]) if user else "",
+                    "last_name": str(user["last_name"]) if user else "",
                     "email": str(user["email"]) if user else "",
                     "created_at": str(user["created_at"]) if user else "",
                 },
