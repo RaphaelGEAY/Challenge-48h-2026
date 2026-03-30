@@ -9,5 +9,5 @@ def read_code(file_path):
 def read_laby(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
-        laby = data['laby']
+        laby = data['maze']
         return laby

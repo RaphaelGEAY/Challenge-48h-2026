@@ -1,14 +1,14 @@
 import time
 
 def display_laby(laby, current_pos):
-    symbols = {0: '0', 1: '1', 2: '2', 3: '3'}
+    symbols = {" ": ' ', "#": '#', 'S' : 'S', 'O': 'O'}
     for i in range(len(laby)):
         row = ""
         for j in range(len(laby[i])):
             if (i, j) == current_pos:
-                row += "4 "
+                row += "P"
             else:
-                row += symbols.get(laby[i][j], '2') + " "
+                row += symbols.get(laby[i][j], 'S ')
         print(row)
 
 def tester(code, laby):
@@ -19,7 +19,7 @@ def tester(code, laby):
     start = None
     for i in range(len(laby)):
         for j in range(len(laby[i])):
-            if laby[i][j] in (2, 4):
+            if laby[i][j] in ('S', 'P'):
                 start = (i, j)
                 break
         if start is not None:
@@ -50,7 +50,7 @@ def tester(code, laby):
         if not (0 <= nx < len(laby) and 0 <= ny < len(laby[0])):
             raise ValueError(f"Sortie des limites: {(nx, ny)}")
 
-        if laby[nx][ny] == 1:
+        if laby[nx][ny] == '#':
             raise ValueError(f"Mur rencontre: {(nx, ny)}")
 
         current_pos[0] = (nx, ny)
@@ -68,7 +68,7 @@ def tester(code, laby):
         time.sleep(1)
 
     x, y = current_pos[0]
-    if laby[x][y] == 3:
+    if laby[x][y] == 'O':
         print("✓ Arrivee atteinte")
     else:
         print(f"✗ Arrivee non atteinte. Position finale: {current_pos[0]}")
