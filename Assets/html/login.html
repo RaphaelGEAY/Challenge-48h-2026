@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in - CodeArena</title>
+    <link rel="stylesheet" href="../css/login.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-text">CodeArena</span>
+            <span class="brand-sub">Daily coding challenges</span>
+          </span>
+        </a>
+
+        <div class="nav-right">
+          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+          <label class="nav-burger" for="nav-toggle" aria-label="Toggle navigation">
+            <span aria-hidden="true"></span>
+          </label>
+
+          <nav class="nav-menu" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="play.html">Play</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="login.html" aria-current="page">Sign in</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" class="auth-wrap">
+      <section class="panel auth-card reveal delay-2">
+        <div class="kicker">
+          <span class="kicker-dot" aria-hidden="true"></span>
+          <span>Welcome back</span>
+        </div>
+
+        <h1>Sign in</h1>
+        <p>
+          This UI is static for now. When you connect authentication later, the form will be ready.
+        </p>
+
+        <form action="#" method="post" aria-label="Sign in form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              class="input"
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              class="input"
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <div class="row">
+            <label class="check">
+              <input type="checkbox" name="remember" />
+              Remember me
+            </label>
+            <a class="link" href="#">Forgot password?</a>
+          </div>
+
+          <div class="auth-actions">
+            <button class="btn btn-primary" type="submit">Sign in</button>
+            <a class="btn btn-ghost" href="play.html">Play as guest</a>
+          </div>
+
+          <div class="fineprint">
+            By continuing, you agree to the (placeholder) Terms and Privacy Policy. No data is sent
+            anywhere in this demo UI.
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
+          <div style="margin-top:6px;">Built for focus and speed.</div>
+        </div>
+        <div>
+          <a href="index.html">Home</a> &nbsp;|&nbsp; <a href="play.html">Play</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+

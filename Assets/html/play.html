@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Play - CodeArena</title>
+    <link rel="stylesheet" href="../css/play.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-text">CodeArena</span>
+            <span class="brand-sub">Daily coding challenges</span>
+          </span>
+        </a>
+
+        <div class="nav-right">
+          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+          <label class="nav-burger" for="nav-toggle" aria-label="Toggle navigation">
+            <span aria-hidden="true"></span>
+          </label>
+
+          <nav class="nav-menu" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="play.html" aria-current="page">Play</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="login.html">Sign in</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" class="main">
+      <div class="container">
+        <section class="game-head">
+          <div class="left">
+            <h1 class="reveal delay-1">Challenge #21</h1>
+            <p class="subline reveal delay-2">
+              Write a function that transforms input data into a normalized list.
+            </p>
+          </div>
+
+          <div class="pill-row reveal delay-3" aria-label="Challenge status">
+            <div class="pill">
+              <span class="icon-dot" aria-hidden="true"></span>
+              Time: 03:12
+            </div>
+            <div class="pill warn">
+              <span class="icon-dot" aria-hidden="true"></span>
+              Tests running
+            </div>
+          </div>
+        </section>
+
+        <section class="game-shell">
+          <aside class="panel side left-side reveal delay-1">
+            <h2>Instructions</h2>
+            <p>
+              You are given an array of objects. Return a new array containing only entries that
+              match the rules, and map them into a simpler shape.
+            </p>
+            <ul>
+              <li>Keep order stable</li>
+              <li>Remove invalid entries</li>
+              <li>Return normalized values</li>
+            </ul>
+
+            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height:1.6;">
+              Use the hints on the right when you get stuck.
+            </div>
+          </aside>
+
+          <div class="code-panel reveal delay-2">
+            <div class="code-toolbar">
+              <div class="toolbar-left">
+                <div class="dots" aria-hidden="true">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+                <div class="file-name">solution.js</div>
+              </div>
+              <div class="toolbar-actions">
+                <button class="mini-btn" type="button">Format</button>
+                <button class="mini-btn" type="button">Reset</button>
+              </div>
+            </div>
+
+            <div class="code-area">
+              <pre class="code" aria-label="Code editor mock">
+<code><span>// Normalize input data</span>
+function normalize(items) {
+  const out = [];
+  for (let i = 0; i &lt; items.length; i++) {
+    const it = items[i];
+    if (!it || it.isValid !== true) continue;
+
+    <span class="cursor-line">out.push({ id: it.id, name: String(it.name).trim() });</span>
+  }
+  return out;
+}</code></pre>
+
+              <div class="play-actions">
+                <button class="btn btn-primary" type="button">Run tests</button>
+                <button class="btn" type="button">Submit</button>
+                <a class="btn btn-ghost" href="dashboard.html">Back to dashboard</a>
+              </div>
+
+              <div class="console" role="status" aria-live="polite">
+                <div class="console-head">
+                  <strong>Console</strong>
+                  <div class="status">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span>Waiting for output…</span>
+                  </div>
+                </div>
+                <pre>
+<span class="ok">✔ Compiled successfully</span>
+<span class="err">✖ 1 test failed</span>
+Hint: check filtering + mapping shape.
+</pre>
+              </div>
+            </div>
+          </div>
+
+          <aside class="panel side right-side reveal delay-3">
+            <h2>Hints</h2>
+            <div class="hint-grid">
+              <div class="hint">
+                <strong><i aria-hidden="true"></i>Filter first</strong>
+                <p>Skip invalid entries before you push into the result array.</p>
+              </div>
+              <div class="hint">
+                <strong><i aria-hidden="true"></i>Normalize values</strong>
+                <p>Trim strings and convert values into the expected types.</p>
+              </div>
+              <div class="hint">
+                <strong><i aria-hidden="true"></i>Preserve order</strong>
+                <p>Iterate left-to-right and only add matching items.</p>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height: 1.6;">
+              Your next improvement: reduce failing edge cases.
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
+          <div style="margin-top:6px;">Focus mode: ON.</div>
+        </div>
+        <div>
+          <a href="play.html">Play</a> &nbsp;|&nbsp; <a href="leaderboard.html">Leaderboard</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+

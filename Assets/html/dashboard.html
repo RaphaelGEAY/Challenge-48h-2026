@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - CodeArena</title>
+    <link rel="stylesheet" href="../css/dashboard.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-text">CodeArena</span>
+            <span class="brand-sub">Daily coding challenges</span>
+          </span>
+        </a>
+
+        <div class="nav-right">
+          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+          <label class="nav-burger" for="nav-toggle" aria-label="Toggle navigation">
+            <span aria-hidden="true"></span>
+          </label>
+
+          <nav class="nav-menu" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="play.html">Play</a>
+            <a href="dashboard.html" aria-current="page">Dashboard</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="login.html">Sign in</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" class="main">
+      <div class="container">
+        <div class="page-title">
+          <div>
+            <h1 class="reveal delay-1">Your dashboard</h1>
+            <p class="reveal delay-2">Track progress, review attempts, and jump back into the next challenge.</p>
+          </div>
+          <a class="btn btn-primary reveal delay-3" href="play.html">Continue playing</a>
+        </div>
+
+        <section class="stats-grid">
+          <article class="card stat-card reveal delay-1">
+            <div class="stat-top">
+              <span class="chip">Rank</span>
+              <span class="mono muted">#128</span>
+            </div>
+            <strong>128</strong>
+            <span>Keep solving to climb faster.</span>
+          </article>
+
+          <article class="card stat-card reveal delay-2">
+            <div class="stat-top">
+              <span class="chip">Streak</span>
+              <span class="mono muted">6 days</span>
+            </div>
+            <strong>6</strong>
+            <span>Consistent reps beat perfect sessions.</span>
+          </article>
+
+          <article class="card stat-card reveal delay-3">
+            <div class="stat-top">
+              <span class="chip">XP</span>
+              <span class="mono muted">Today</span>
+            </div>
+            <strong>340</strong>
+            <span>Momentum looks good.</span>
+          </article>
+
+          <article class="card stat-card reveal delay-4">
+            <div class="stat-top">
+              <span class="chip">Accuracy</span>
+              <span class="mono muted">92%</span>
+            </div>
+            <strong>92%</strong>
+            <span>Fewer wrong runs, quicker wins.</span>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="card reveal delay-2" style="padding:18px;">
+            <h3 style="margin:0 0 10px;">Progress overview</h3>
+            <div class="progress-wrap">
+              <div>
+                <div class="progress-row">
+                  <span class="label">Arrays & loops</span>
+                  <span class="pct">72%</span>
+                </div>
+                <div class="bar" aria-label="Arrays and loops progress">
+                  <i style="--w:72%"></i>
+                </div>
+              </div>
+
+              <div>
+                <div class="progress-row">
+                  <span class="label">Strings</span>
+                  <span class="pct">58%</span>
+                </div>
+                <div class="bar" aria-label="Strings progress">
+                  <i style="--w:58%"></i>
+                </div>
+              </div>
+
+              <div>
+                <div class="progress-row">
+                  <span class="label">Conditionals</span>
+                  <span class="pct">81%</span>
+                </div>
+                <div class="bar" aria-label="Conditionals progress">
+                  <i style="--w:81%"></i>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height:1.6;">
+              Tip: aim for quick iterations. Use the play screen’s console panel to narrow down issues.
+            </div>
+          </div>
+
+          <aside class="card reveal delay-3">
+            <h3 style="margin:0 0 12px;">Recent attempts</h3>
+            <div class="attempts">
+              <div class="attempt">
+                <div class="top">
+                  <strong>Challenge #19</strong>
+                  <span class="tag good">Passed</span>
+                </div>
+                <div class="meta">
+                  <span>Time: <span class="mono">00:42</span></span>
+                  <span>Tests: <span class="mono">12/12</span></span>
+                  <span>XP: <span class="mono">+80</span></span>
+                </div>
+              </div>
+
+              <div class="attempt">
+                <div class="top">
+                  <strong>Challenge #20</strong>
+                  <span class="tag warn">Partial</span>
+                </div>
+                <div class="meta">
+                  <span>Time: <span class="mono">01:10</span></span>
+                  <span>Tests: <span class="mono">9/12</span></span>
+                  <span>XP: <span class="mono">+35</span></span>
+                </div>
+              </div>
+
+              <div class="attempt">
+                <div class="top">
+                  <strong>Challenge #18</strong>
+                  <span class="tag bad">Failed</span>
+                </div>
+                <div class="meta">
+                  <span>Time: <span class="mono">00:27</span></span>
+                  <span>Tests: <span class="mono">2/12</span></span>
+                  <span>XP: <span class="mono">+10</span></span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
+          <div style="margin-top:6px;">Keep your streak alive.</div>
+        </div>
+        <div>
+          <a href="play.html">Play</a> &nbsp;|&nbsp; <a href="leaderboard.html">Leaderboard</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaderboard - CodeArena</title>
+    <link rel="stylesheet" href="../css/leaderboard.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="nav-brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-text">CodeArena</span>
+            <span class="brand-sub">Daily coding challenges</span>
+          </span>
+        </a>
+
+        <div class="nav-right">
+          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+          <label class="nav-burger" for="nav-toggle" aria-label="Toggle navigation">
+            <span aria-hidden="true"></span>
+          </label>
+
+          <nav class="nav-menu" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="play.html">Play</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="leaderboard.html" aria-current="page">Leaderboard</a>
+            <a href="login.html">Sign in</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="content" class="main">
+      <div class="container">
+        <div class="board-head">
+          <div>
+            <h1 class="reveal delay-1">Leaderboard</h1>
+            <p class="reveal delay-2">Top players based on points. (Static demo data for now.)</p>
+          </div>
+          <div class="chips reveal delay-3" aria-label="Leaderboard filters">
+            <button class="chip" type="button">All time</button>
+            <button class="chip" type="button">This week</button>
+            <button class="chip" type="button">Today</button>
+          </div>
+        </div>
+
+        <section class="board-grid">
+          <aside class="panel top-list reveal delay-1">
+            <h2 style="margin:0 0 10px; font-size:15px;">Top 3</h2>
+
+            <div class="rank-item">
+              <div class="rank-left">
+                <div class="avatar">A</div>
+                <div class="rank-meta">
+                  <strong>Aria K.</strong>
+                  <span>First place</span>
+                </div>
+              </div>
+              <div class="rank-score mono">9870</div>
+            </div>
+
+            <div class="rank-item">
+              <div class="rank-left">
+                <div class="avatar">B</div>
+                <div class="rank-meta">
+                  <strong>Benji R.</strong>
+                  <span>Second place</span>
+                </div>
+              </div>
+              <div class="rank-score mono">9542</div>
+            </div>
+
+            <div class="rank-item">
+              <div class="rank-left">
+                <div class="avatar">C</div>
+                <div class="rank-meta">
+                  <strong>Cyra M.</strong>
+                  <span>Third place</span>
+                </div>
+              </div>
+              <div class="rank-score mono">9321</div>
+            </div>
+
+            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height: 1.6;">
+              Tip: run more tests in less time to maximize points per minute.
+            </div>
+          </aside>
+
+          <div class="panel table-wrap reveal delay-2">
+            <table aria-label="Leaderboard table">
+              <thead>
+                <tr>
+                  <th style="width:90px;">Rank</th>
+                  <th>Player</th>
+                  <th style="width:160px;">Score</th>
+                  <th style="width:160px;">Win rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">#1</td>
+                  <td>Aria K.</td>
+                  <td class="mono">9870</td>
+                  <td class="mono">91%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#2</td>
+                  <td>Benji R.</td>
+                  <td class="mono">9542</td>
+                  <td class="mono">89%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#3</td>
+                  <td>Cyra M.</td>
+                  <td class="mono">9321</td>
+                  <td class="mono">88%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#4</td>
+                  <td>Dax P.</td>
+                  <td class="mono">9012</td>
+                  <td class="mono">86%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#5</td>
+                  <td>Elena S.</td>
+                  <td class="mono">8754</td>
+                  <td class="mono">85%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#6</td>
+                  <td>Fynn T.</td>
+                  <td class="mono">8601</td>
+                  <td class="mono">84%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#7</td>
+                  <td>Gwen L.</td>
+                  <td class="mono">8429</td>
+                  <td class="mono">83%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#8</td>
+                  <td>Hugo V.</td>
+                  <td class="mono">8203</td>
+                  <td class="mono">82%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#9</td>
+                  <td>Ivy W.</td>
+                  <td class="mono">8011</td>
+                  <td class="mono">81%</td>
+                </tr>
+                <tr>
+                  <td class="mono">#10</td>
+                  <td>Jules Z.</td>
+                  <td class="mono">7890</td>
+                  <td class="mono">80%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong style="color: rgba(234,240,255,.9);">CodeArena</strong>
+          <div style="margin-top:6px;">Climb one challenge at a time.</div>
+        </div>
+        <div>
+          <a href="play.html">Play</a> &nbsp;|&nbsp; <a href="dashboard.html">Dashboard</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+
