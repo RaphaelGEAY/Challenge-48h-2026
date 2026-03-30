@@ -150,7 +150,7 @@
       setStatus(
         error instanceof Error
           ? error.message
-          : "Impossible de joindre le backend. Lance d'abord `python Connexion.py`.",
+          : "Impossible de joindre le backend. Lance d'abord `python -m Backend.app`.",
         "error"
       );
     } finally {

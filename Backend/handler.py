@@ -1,134 +1,25 @@
-import argparse
-import base64
-import binascii
-import hashlib
-import hmac
 import json
 import mimetypes
-import re
-import secrets
 import sqlite3
-import threading
-import time
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.cookies import SimpleCookie
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from http.server import BaseHTTPRequestHandler
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import unquote, urlparse
 
-BASE_DIR = Path(__file__).resolve().parent
-ASSETS_DIR = BASE_DIR / "Assets"
-DB_PATH = BASE_DIR / "auth.db"
-
-EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-PASSWORD_MIN_LENGTH = 8
-SESSION_COOKIE_NAME = "codearena_session"
-DEFAULT_SESSION_SECONDS = 60 * 60 * 24
-REMEMBER_SESSION_SECONDS = 60 * 60 * 24 * 30
-PBKDF2_ROUNDS = 240000
-
-SESSIONS: Dict[str, Tuple[int, float]] = {}
-SESSION_LOCK = threading.Lock()
-
-HTML_SHORTCUTS = {
-    "/index.html",
-    "/login.html",
-    "/dashboard.html",
-    "/leaderboard.html",
-    "/play.html",
-}
-
-
-def init_db() -> None:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-            """
-        )
-        conn.commit()
-
-
-def db_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def normalize_email(email: str) -> str:
-    return email.strip().lower()
-
-
-def hash_password(password: str) -> str:
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PBKDF2_ROUNDS)
-    salt_b64 = base64.b64encode(salt).decode("ascii")
-    digest_b64 = base64.b64encode(digest).decode("ascii")
-    return f"pbkdf2_sha256${PBKDF2_ROUNDS}${salt_b64}${digest_b64}"
-
-
-def verify_password(password: str, stored_hash: str) -> bool:
-    try:
-        algorithm, rounds_raw, salt_b64, digest_b64 = stored_hash.split("$", 3)
-        if algorithm != "pbkdf2_sha256":
-            return False
-        rounds = int(rounds_raw)
-        salt = base64.b64decode(salt_b64.encode("ascii"))
-        expected_digest = base64.b64decode(digest_b64.encode("ascii"))
-    except (ValueError, TypeError, binascii.Error):
-        return False
-
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, rounds)
-    return hmac.compare_digest(digest, expected_digest)
-
-
-def create_session(user_id: int, ttl_seconds: int) -> str:
-    token = secrets.token_urlsafe(48)
-    expires_at = time.time() + ttl_seconds
-    with SESSION_LOCK:
-        SESSIONS[token] = (user_id, expires_at)
-    return token
-
-
-def get_session_user_id(token: Optional[str]) -> Optional[int]:
-    if not token:
-        return None
-
-    with SESSION_LOCK:
-        session_data = SESSIONS.get(token)
-        if not session_data:
-            return None
-
-        user_id, expires_at = session_data
-        if expires_at <= time.time():
-            del SESSIONS[token]
-            return None
-
-        return user_id
-
-
-def destroy_session(token: Optional[str]) -> None:
-    if not token:
-        return
-    with SESSION_LOCK:
-        SESSIONS.pop(token, None)
-
-
-def cleanup_sessions() -> None:
-    now = time.time()
-    with SESSION_LOCK:
-        expired_tokens = [token for token, (_, expires_at) in SESSIONS.items() if expires_at <= now]
-        for token in expired_tokens:
-            del SESSIONS[token]
+from .config import (
+    ASSETS_DIR,
+    BASE_DIR,
+    DEFAULT_SESSION_SECONDS,
+    HTML_SHORTCUTS,
+    PASSWORD_MIN_LENGTH,
+    REMEMBER_SESSION_SECONDS,
+    SESSION_COOKIE_NAME,
+)
+from .database import db_connection
+from .security import hash_password, is_valid_email, normalize_email, verify_password
+from .sessions import cleanup_sessions, create_session, destroy_session, get_session_user_id
 
 
 def utc_now_iso() -> str:
@@ -153,9 +44,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         cleanup_sessions()
-
-        parsed = urlparse(self.path)
-        path = parsed.path
+        path = urlparse(self.path).path
 
         if path == "/api/auth/me":
             self._handle_me()
@@ -169,9 +58,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         cleanup_sessions()
-
-        parsed = urlparse(self.path)
-        path = parsed.path
+        path = urlparse(self.path).path
 
         if path == "/api/auth/register":
             self._handle_register()
@@ -212,7 +99,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             )
             return
 
-        if not EMAIL_REGEX.match(email):
+        if not is_valid_email(email):
             self._send_json(
                 HTTPStatus.BAD_REQUEST,
                 {"ok": False, "error": "Adresse email invalide."},
@@ -241,6 +128,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                     (username, email, password_hash, utc_now_iso()),
                 )
                 conn.commit()
+
                 last_row_id = cursor.lastrowid
                 if last_row_id is None:
                     self._send_json(
@@ -513,28 +401,3 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         morsel["max-age"] = "0"
         return morsel.OutputString()
 
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="CodeArena auth backend")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
-    parser.add_argument("--port", type=int, default=5000, help="Port to bind")
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = parse_args()
-    init_db()
-
-    server = ThreadingHTTPServer((args.host, args.port), AuthRequestHandler)
-    print(f"Server listening on http://{args.host}:{args.port}")
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-
-
-if __name__ == "__main__":
-    main()

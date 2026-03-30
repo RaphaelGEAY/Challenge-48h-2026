@@ -3,7 +3,19 @@
 ## Lancer le serveur
 
 ```powershell
-python3 Connexion.py
+python -m Backend.app
+```
+
+Alternative equivalente:
+
+```powershell
+python .\Backend\app.py
+```
+
+Si `python` n'est pas disponible, essayez:
+
+```powershell
+py -3 -m Backend.app
 ```
 
 Le serveur demarre par defaut sur `http://127.0.0.1:5000`.
