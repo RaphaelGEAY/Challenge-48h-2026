@@ -3,13 +3,7 @@
 ## Lancer le serveur
 
 ```powershell
-python Connexion.py
-```
-
-Si `python` n'est pas disponible sur votre machine, essayez:
-
-```powershell
-py -3 Connexion.py
+python3 Connexion.py
 ```
 
 Le serveur demarre par defaut sur `http://127.0.0.1:5000`.
@@ -32,7 +26,7 @@ Ouvrir:
 
 ### Register
 
-```json
+```
 {
   "username": "CodeNinja42",
   "email": "you@example.com",
@@ -43,7 +37,7 @@ Ouvrir:
 
 ### Login
 
-```json
+```
 {
   "email": "you@example.com",
   "password": "super-secret-password",
