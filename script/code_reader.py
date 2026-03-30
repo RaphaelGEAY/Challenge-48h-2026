@@ -5,3 +5,9 @@ def read_code(file_path):
         data = json.load(file)
         code = data['content']
         return code
+
+def read_laby(file_path):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+        laby = data['laby']
+        return laby
