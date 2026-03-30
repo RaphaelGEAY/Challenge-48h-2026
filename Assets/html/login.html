@@ -44,11 +44,32 @@
         </div>
 
         <h1>Sign in</h1>
-        <p>
-          This UI is static for now. When you connect authentication later, the form will be ready.
+        <p id="auth-description">
+          Connecte-toi pour sauvegarder ta progression et apparaitre dans le leaderboard.
         </p>
 
-        <form action="#" method="post" aria-label="Sign in form">
+        <div class="auth-switch" role="tablist" aria-label="Auth mode">
+          <button class="auth-switch-btn is-active" type="button" id="mode-login" aria-selected="true">
+            Sign in
+          </button>
+          <button class="auth-switch-btn" type="button" id="mode-register" aria-selected="false">
+            Register
+          </button>
+        </div>
+
+        <form action="#" method="post" aria-label="Sign in form" id="auth-form" novalidate>
+          <div class="field is-hidden" id="username-field">
+            <label for="username">Username</label>
+            <input
+              class="input"
+              id="username"
+              name="username"
+              type="text"
+              placeholder="CodeNinja42"
+              autocomplete="username"
+            />
+          </div>
+
           <div class="field">
             <label for="email">Email</label>
             <input
@@ -83,14 +104,17 @@
             <a class="link" href="#">Forgot password?</a>
           </div>
 
+          <div class="status is-hidden" id="auth-status" aria-live="polite"></div>
+
           <div class="auth-actions">
-            <button class="btn btn-primary" type="submit">Sign in</button>
+            <button class="btn btn-primary" type="submit" id="submit-button">Sign in</button>
+            <button class="btn btn-ghost" type="button" id="switch-mode">Create account</button>
             <a class="btn btn-ghost" href="play.html">Play as guest</a>
           </div>
 
           <div class="fineprint">
-            By continuing, you agree to the (placeholder) Terms and Privacy Policy. No data is sent
-            anywhere in this demo UI.
+            En continuant, vous acceptez les conditions d'utilisation et la politique de
+            confidentialite.
           </div>
         </form>
       </section>
@@ -107,6 +131,7 @@
         </div>
       </div>
     </footer>
+    <script src="../js/auth.js"></script>
   </body>
 </html>
 
