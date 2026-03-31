@@ -328,6 +328,9 @@
       lines.push("Level: " + level);
       lines.push("Status: " + status);
       lines.push("Steps: " + String(run.steps || 0));
+      lines.push("Moves: " + String(run.moves || 0) + " | Jumps: " + String(run.jumps || 0));
+      lines.push("Code length: " + String(run.code_length || 0) + " chars | Lines: " + String(run.code_lines || 0));
+      lines.push("Score: " + String(run.score || 0) + " points");
       if (typeof run.message === "string" && run.message.trim()) {
         lines.push("Message: " + run.message);
       }

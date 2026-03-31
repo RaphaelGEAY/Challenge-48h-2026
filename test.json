@@ -1,0 +1,11 @@
+{
+    "content": "move('right')\nmove('down')\nmove('down')\nmove('left')\nmove('down')\nmove('down')\nmove('down')\nmove('right')\nmove('right')\nmove('up')\nmove('right')\nmove('up')\nmove('up')\nmove('up')\nmove('up')\nmove('right')\nmove('right')\nmove('down')\nmove('down')\nmove('down')\nmove('down')\nmove('down')",
+    "laby": [
+        [2, 0, 1, 0, 0, 0],
+        [1, 0, 1, 0, 1, 0],
+        [0, 0, 1, 0, 1, 0],
+        [0, 1, 1, 0, 1, 0],
+        [0, 1, 0, 0, 1, 0],
+        [0, 0, 0, 1, 1, 3]
+    ]
+}

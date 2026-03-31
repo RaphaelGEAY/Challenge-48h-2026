@@ -41,7 +41,7 @@ def tester(
     code: str,
     laby: List[List[str]],
     return_history: bool = False,
-    max_trace_steps: int = 1500,
+    max_trace_steps: int = 10000,
     exec_globals: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     if not laby:
@@ -78,6 +78,8 @@ def tester(
     trace: List[Dict[str, Any]] = []
     code_lines = code.splitlines()
     executed_steps = [0]
+    moves_count = [0]  # move() calls
+    jumps_count = [0]  # jump() calls
 
     def tracer(frame: Any, event: str, arg: Any) -> Any:
         if event == "line" and frame.f_code.co_filename == "<string>":
@@ -118,6 +120,7 @@ def tester(
         if laby[nx][ny] == "X":
             raise ValueError(f"Piege touche: {(nx, ny)}")
 
+        moves_count[0] += 1
         current_pos[0] = (nx, ny)
         history.append((nx, ny))
         return current_pos[0]
@@ -135,7 +138,14 @@ def tester(
 
         dx, dy = moves[direction]
         x, y = current_pos[0]
+        mx, my = x + dx, y + dy  # Case intermédiaire
         nx, ny = x + 2 * dx, y + 2 * dy
+
+        if not (0 <= mx < len(laby) and 0 <= my < len(laby[0])):
+            raise ValueError(f"Jump hors limites: {(mx, my)}")
+
+        if laby[mx][my] == "#":
+            raise ValueError(f"Mur bloque le jump: {(mx, my)}")
 
         if not (0 <= nx < len(laby) and 0 <= ny < len(laby[0])):
             raise ValueError(f"Jump hors limites: {(nx, ny)}")
@@ -144,6 +154,7 @@ def tester(
         if laby[nx][ny] == "X":
             raise ValueError(f"Piege touche au jump: {(nx, ny)}")
 
+        jumps_count[0] += 1
         current_pos[0] = (nx, ny)
         history.append((nx, ny))
         return current_pos[0]
@@ -171,6 +182,19 @@ def tester(
         message = "Arrivee atteinte" if status == "success" else f"Arrivee non atteinte. Position finale: {current_pos[0]}"
 
     if return_history:
+        code_length = len(code)
+        code_lines_count = len(code_lines)
+        
+        if error:
+            score = 0
+        else:
+            # Base score: 500 points
+            base = 500
+            move_cost = moves_count[0]
+            jump_cost = jumps_count[0] * 3      # Un jump coûte plus cher (less optimal)
+            code_cost = code_length // 10       # 1 point par 10 caractères
+            score = max(0, base - move_cost - jump_cost - code_cost) if status == "success" else 0
+        
         return {
             "error": error,
             "history": history,
@@ -178,6 +202,11 @@ def tester(
             "current": current_pos[0],
             "status": status,
             "message": message,
+            "moves": moves_count[0],
+            "jumps": jumps_count[0],
+            "code_length": code_length,
+            "code_lines": code_lines_count,
+            "score": score,
         }
 
     if error:

@@ -37,8 +37,18 @@ SAFE_EXEC_BUILTINS: Dict[str, Any] = {
     "print": print,
 }
 
-BANNED_CALLS = {"open", "exec", "eval", "compile", "__import__", "input"}
+def safe_import(name: str, *args: Any, **kwargs: Any) -> Any:
+    """Import sécurisé - autorise seulement les modules sûrs"""
+    module_name = name.split('.')[0]
+    if module_name not in ALLOWED_MODULES:
+        raise ImportError(f"Import non autorise: {module_name}")
+    return __import__(name, *args, **kwargs)
+
+SAFE_EXEC_BUILTINS["__import__"] = safe_import
+
+BANNED_CALLS = {"open", "exec", "eval", "compile", "input"}
 BANNED_MODULES = {"os", "sys", "subprocess", "pathlib", "shutil", "socket"}
+ALLOWED_MODULES = {"collections", "math", "random", "itertools"}  # Modules sûrs autorisés
 
 
 def utc_now_iso() -> str:
@@ -60,8 +70,16 @@ def validate_game_code(code: str) -> None:
         raise ValueError(f"Erreur de syntaxe: {exc.msg} (line {exc.lineno})") from exc
 
     for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            raise ValueError("Les imports ne sont pas autorises.")
+        # Vérifier les imports - autoriser seulement les modules sûrs
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                module_name = alias.name.split('.')[0]
+                if module_name not in ALLOWED_MODULES:
+                    raise ValueError(f"Import non autorise: {module_name}")
+        
+        if isinstance(node, ast.ImportFrom):
+            if node.module and node.module.split('.')[0] not in ALLOWED_MODULES:
+                raise ValueError(f"Import non autorise: {node.module}")
 
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in BANNED_CALLS:
             raise ValueError(f"Appel interdit: {node.func.id}")
@@ -576,7 +594,7 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             code,
             self._clone_maze(maze),
             return_history=True,
-            max_trace_steps=2000,
+            max_trace_steps=10000,
             exec_globals={"__builtins__": SAFE_EXEC_BUILTINS},
         )
         if not run:
@@ -588,6 +606,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                 "trace": [],
                 "current": None,
                 "steps": 0,
+                "moves": 0,
+                "jumps": 0,
+                "code_length": 0,
+                "code_lines": 0,
+                "score": 0,
             }
 
         raw_history = run.get("history", [])
@@ -622,6 +645,13 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         error = run.get("error")
         error_text = str(error) if error else None
         steps = max(0, len(history) - 1)
+        
+        # Score et statistiques
+        moves = run.get("moves", 0)
+        jumps = run.get("jumps", 0)
+        code_length = run.get("code_length", 0)
+        code_lines = run.get("code_lines", 0)
+        score = run.get("score", 0)
 
         if status not in {"success", "failed"}:
             status = "failed"
@@ -634,6 +664,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
             "trace": trace,
             "current": current,
             "steps": steps,
+            "moves": moves,
+            "jumps": jumps,
+            "code_length": code_length,
+            "code_lines": code_lines,
+            "score": score,
         }
 
     def _handle_game_levels(self) -> None:
@@ -858,6 +893,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                     "trace": run["trace"],
                     "current": run["current"],
                     "steps": run["steps"],
+                    "moves": run["moves"],
+                    "jumps": run["jumps"],
+                    "code_length": run["code_length"],
+                    "code_lines": run["code_lines"],
+                    "score": run["score"],
                 },
             },
         )
@@ -976,6 +1016,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                     "message": run["message"],
                     "error": run["error"],
                     "steps": steps,
+                    "moves": run["moves"],
+                    "jumps": run["jumps"],
+                    "code_length": run["code_length"],
+                    "code_lines": run["code_lines"],
+                    "score": run["score"],
                     "history": run["history"],
                     "trace": run["trace"],
                     "current": run["current"],
