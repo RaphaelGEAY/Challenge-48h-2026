@@ -2,19 +2,60 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Labyrinthe</title>
   <style>
-    body { font-family: monospace; background:#111; color:#eee; }
-    #maze { white-space: pre; font-size:16px; line-height:1.2; }
-    input { width: 300px; padding:5px; background:#222; color:#eee; border:1px solid #555; }
-    button { padding:5px 10px; margin-left:5px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: monospace;
+      background: #111;
+      color: #eee;
+      padding: 24px;
+    }
+
+    .page {
+      width: min(1400px, 100%);
+      margin: 0 auto;
+    }
+
+    .maze-section {
+      border: 1px solid #333;
+      border-radius: 14px;
+      background: #171717;
+      padding: 18px;
+    }
+
+    .maze-scroll {
+      width: 100%;
+      overflow: auto;
+      padding-bottom: 8px;
+    }
+
+    #maze {
+      display: inline-block;
+      min-width: max-content;
+      white-space: pre;
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: 0.5px;
+      background: #0f0f0f;
+      border: 1px solid #2f2f2f;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
   </style>
 </head>
 <body>
+<main class="page">
+  <section class="maze-section">
+    <h2>Labyrinthe - Commandes : forward, back, left, right</h2>
+    <div class="maze-scroll">
+      <div id="maze"></div>
+    </div>
+  </section>
+</main>
 
-<h2>Labyrinthe — Commandes : forward, back, left, right</h2>
-
-<div id="maze"></div>
-
-
-
+</body>
+</html>
