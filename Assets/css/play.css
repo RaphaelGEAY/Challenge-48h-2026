@@ -55,8 +55,8 @@
 
 .game-shell{
   display:grid;
-  grid-template-columns: 320px 1fr 280px;
-  gap: 14px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 16px;
   align-items:start;
 }
 
@@ -158,15 +158,53 @@
 }
 
 .code-area{
-  padding: 16px;
+  padding: 18px;
   background:
     radial-gradient(500px 250px at 50% 0%, rgba(124,92,255,.18), transparent 50%),
     rgba(0,0,0,.12);
 }
 
+.maze-head{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 .maze-wrap h2{
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 14px;
+}
+
+.maze-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 8px;
+}
+
+.maze-meta span{
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  color: rgba(234,240,255,.9);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+#play-status-pill.warn{
+  border-color: rgba(255,176,32,.6);
+  color: #ffd283;
+}
+#play-status-pill.good{
+  border-color: rgba(46,229,157,.55);
+  color: #8af4c1;
+}
+#play-status-pill.bad{
+  border-color: rgba(255,77,109,.6);
+  color: #ff9caf;
 }
 
 .maze{
@@ -176,13 +214,14 @@
   background: rgba(255,255,255,.03);
   border-radius: 14px;
   padding: 12px;
-  min-height: 220px;
-  overflow: auto;
+  min-height: 420px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .maze-cell{
-  width: 24px;
-  height: 24px;
+  width: var(--maze-cell-size, 24px);
+  height: var(--maze-cell-size, 24px);
   border-radius: 6px;
   display:flex;
   align-items:center;
@@ -194,6 +233,7 @@
 .maze-wall{ background: #2b334d; }
 .maze-space{ background: #121920; }
 .maze-start{ background: #2e66ff; color: #f3f6ff; }
+.maze-trap{ background: #ff4d6d; color: #20060d; }
 .maze-goal{ background: #12c96a; color: #07140d; }
 .maze-player{ background: #ffb74d; color: #1a1207; }
 
@@ -283,14 +323,14 @@
 }
 
 @media (max-width: 1100px){
-  .game-shell{ grid-template-columns: 300px 1fr; }
-  .game-shell .right-side{ display:none; }
+  .game-shell{ grid-template-columns: 250px minmax(0, 1fr); }
 }
 
-@media (max-width: 860px){
+@media (max-width: 900px){
   .game-shell{ grid-template-columns: 1fr; }
   .game-shell .left-side{ order: 2; }
   .play-actions .btn{ width: 100%; }
+  .maze{ min-height: 320px; }
 }
 
 .hint-grid{

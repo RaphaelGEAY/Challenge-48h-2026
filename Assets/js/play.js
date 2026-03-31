@@ -5,7 +5,6 @@
   const loadLevelButton = document.getElementById("play-load-level");
   const saveCodeButton = document.getElementById("play-save-code");
   const runButton = document.getElementById("play-run-btn");
-  const submitButton = document.getElementById("play-submit-btn");
   const codeEditor = document.getElementById("play-code");
   const mazeRoot = document.getElementById("play-maze");
   const consoleRoot = document.getElementById("play-console");
@@ -18,13 +17,9 @@
     !loadLevelButton ||
     !saveCodeButton ||
     !runButton ||
-    !submitButton ||
     !codeEditor ||
     !mazeRoot ||
-    !consoleRoot ||
-    !statusPill ||
-    !levelPill ||
-    !runMeta
+    !consoleRoot
   ) {
     return;
   }
@@ -53,7 +48,6 @@
     loadLevelButton.disabled = busy;
     saveCodeButton.disabled = busy;
     runButton.disabled = busy;
-    submitButton.disabled = busy;
   }
 
   function setConsole(text) {
@@ -61,15 +55,21 @@
   }
 
   function setRunMeta(text) {
+    if (!runMeta) {
+      return;
+    }
     runMeta.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>' + text + "</span>";
   }
 
   function setStatus(kind, text) {
+    if (!statusPill) {
+      return;
+    }
     statusPill.classList.remove("warn", "good", "bad");
     if (kind === "warn" || kind === "good" || kind === "bad") {
       statusPill.classList.add(kind);
     }
-    statusPill.innerHTML = '<span class="icon-dot" aria-hidden="true"></span>' + text;
+    statusPill.textContent = text;
   }
 
   function parseJsonSafe(response) {
@@ -103,9 +103,20 @@
     state.maze = Array.isArray(maze) ? maze : [];
     const rows = state.maze.length;
     const cols = rows > 0 && Array.isArray(state.maze[0]) ? state.maze[0].length : 0;
+    const styles = window.getComputedStyle(mazeRoot);
+    const mazeWidth = mazeRoot.clientWidth || mazeRoot.getBoundingClientRect().width || 0;
+    const paddingLeft = Number.parseFloat(styles.paddingLeft || "0") || 0;
+    const paddingRight = Number.parseFloat(styles.paddingRight || "0") || 0;
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const availableWidth = Math.max(0, mazeWidth - paddingLeft - paddingRight);
+    const totalGapWidth = Math.max(0, cols - 1) * gap;
+    const rawCellSize = cols > 0 ? Math.floor((availableWidth - totalGapWidth) / cols) : 24;
+    const cellSize = Math.max(10, Math.min(32, Number.isFinite(rawCellSize) ? rawCellSize : 32));
 
     mazeRoot.innerHTML = "";
-    mazeRoot.style.gridTemplateColumns = "repeat(" + Math.max(1, cols) + ", 24px)";
+    mazeRoot.style.setProperty("--maze-cell-size", String(cellSize) + "px");
+    mazeRoot.style.gridTemplateColumns =
+      "repeat(" + Math.max(1, cols) + ", var(--maze-cell-size))";
 
     for (let i = 0; i < rows; i += 1) {
       const row = Array.isArray(state.maze[i]) ? state.maze[i] : [];
@@ -122,6 +133,9 @@
         } else if (value === "S" || value === "P") {
           cell.classList.add("maze-start");
           cell.textContent = "S";
+        } else if (value === "X") {
+          cell.classList.add("maze-trap");
+          cell.textContent = "X";
         } else if (value === "O") {
           cell.classList.add("maze-goal");
           cell.textContent = "O";
@@ -154,7 +168,9 @@
       const resolvedLevel = typeof mazePayload.level === "string" ? mazePayload.level : key;
       state.level = resolvedLevel;
       levelSelect.value = resolvedLevel;
-      levelPill.innerHTML = '<span class="icon-dot" aria-hidden="true"></span>Level: ' + resolvedLevel;
+      if (levelPill) {
+        levelPill.textContent = "Level: " + resolvedLevel;
+      }
 
       renderMaze(mazePayload.maze || [], null);
       codeEditor.value = typeof codePayload.content === "string" ? codePayload.content : "";
@@ -267,7 +283,7 @@
     }
   }
 
-  async function runOrSubmit(kind) {
+  async function runCode() {
     if (state.busy) {
       return;
     }
@@ -280,11 +296,11 @@
     }
 
     setBusy(true);
-    setStatus("warn", kind === "submit" ? "Submitting..." : "Running...");
-    setRunMeta(kind === "submit" ? "Submitting attempt..." : "Executing code...");
+    setStatus("warn", "Running...");
+    setRunMeta("Executing code...");
 
     try {
-      const payload = await api(kind === "submit" ? "/api/game/submit" : "/api/game/run", {
+      const payload = await api("/api/game/run", {
         method: "POST",
         body: {
           level: level,
@@ -319,13 +335,8 @@
         lines.push("Error: " + run.error);
       }
 
-      if (kind === "submit" && payload.attempt) {
-        lines.push("XP: " + String(payload.attempt.xp_delta));
-        lines.push("Recorded attempt #" + String(payload.attempt.id || "n/a"));
-      }
-
       setConsole(lines.join("\n"));
-      setRunMeta(kind === "submit" ? "Submission completed" : "Run completed");
+      setRunMeta("Run completed");
     } catch (error) {
       setStatus("bad", "Error");
       setRunMeta("Execution failed");
@@ -349,11 +360,7 @@
     });
 
     runButton.addEventListener("click", function () {
-      runOrSubmit("run");
-    });
-
-    submitButton.addEventListener("click", function () {
-      runOrSubmit("submit");
+      runCode();
     });
   }
 

@@ -3,8 +3,22 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 
+DEFAULT_SAFE_BUILTINS: Dict[str, Any] = {
+    "range": range,
+    "len": len,
+    "enumerate": enumerate,
+    "min": min,
+    "max": max,
+    "abs": abs,
+    "int": int,
+    "str": str,
+    "sum": sum,
+    "print": print,
+}
+
+
 def display_laby(laby: List[List[str]], current_pos: Tuple[int, int]) -> None:
-    symbols = {" ": " ", "#": "#", "S": "S", "O": "O"}
+    symbols = {" ": " ", "#": "#", "S": "S", "O": "O", "X": "X"}
     for i in range(len(laby)):
         row = ""
         for j in range(len(laby[i])):
@@ -15,47 +29,62 @@ def display_laby(laby: List[List[str]], current_pos: Tuple[int, int]) -> None:
         print(row)
 
 
+def _find_start(laby: List[List[str]]) -> Optional[Tuple[int, int]]:
+    for i in range(len(laby)):
+        for j in range(len(laby[i])):
+            if laby[i][j] in ("S", "P"):
+                return (i, j)
+    return None
+
+
 def tester(
     code: str,
     laby: List[List[str]],
     return_history: bool = False,
     max_trace_steps: int = 1500,
+    exec_globals: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     if not laby:
         message = "Labyrinthe vide"
         if return_history:
-            return {"error": message, "history": [], "current": None}
+            return {
+                "error": message,
+                "history": [],
+                "trace": [],
+                "current": None,
+                "status": "failed",
+                "message": message,
+            }
         print(f"✗ {message}")
-        return
+        return None
 
-    start = None
-    for i in range(len(laby)):
-        for j in range(len(laby[i])):
-            if laby[i][j] in ('S', 'P'):
-                start = (i, j)
-                break
-        if start is not None:
-            break
-
+    start = _find_start(laby)
     if start is None:
         message = "Depart introuvable (case 2 ou 4)"
         if return_history:
-            return {"error": message, "history": [], "current": None}
+            return {
+                "error": message,
+                "history": [],
+                "trace": [],
+                "current": None,
+                "status": "failed",
+                "message": message,
+            }
         print(f"✗ {message}")
-        return
+        return None
 
     current_pos = [start]
-    history = [start]
-    trace = []
+    history: List[Tuple[int, int]] = [start]
+    trace: List[Dict[str, Any]] = []
     code_lines = code.splitlines()
-
     executed_steps = [0]
 
-    def tracer(frame, event, arg):
+    def tracer(frame: Any, event: str, arg: Any) -> Any:
         if event == "line" and frame.f_code.co_filename == "<string>":
             executed_steps[0] += 1
-            if executed_steps[0] > max(1, max_trace_steps):
+            if executed_steps[0] > max(1, int(max_trace_steps)):
                 raise RuntimeError("Limite de trace depassee (boucle potentiellement infinie).")
+
             lineno = frame.f_lineno
             line = code_lines[lineno - 1] if 1 <= lineno <= len(code_lines) else ""
             trace.append(
@@ -67,7 +96,7 @@ def tester(
             )
         return tracer
 
-    def move(direction):
+    def move(direction: str) -> Tuple[int, int]:
         moves = {
             "left": (0, -1),
             "right": (0, 1),
@@ -84,39 +113,65 @@ def tester(
 
         if not (0 <= nx < len(laby) and 0 <= ny < len(laby[0])):
             raise ValueError(f"Sortie des limites: {(nx, ny)}")
-
         if laby[nx][ny] == "#":
             raise ValueError(f"Mur rencontre: {(nx, ny)}")
+        if laby[nx][ny] == "X":
+            raise ValueError(f"Piege touche: {(nx, ny)}")
 
         current_pos[0] = (nx, ny)
         history.append((nx, ny))
         return current_pos[0]
 
-    error = None
+    def jump(direction: str) -> Tuple[int, int]:
+        moves = {
+            "left": (0, -1),
+            "right": (0, 1),
+            "up": (-1, 0),
+            "down": (1, 0),
+        }
+
+        if direction not in moves:
+            raise ValueError("Direction invalide pour jump. Utilise: left, right, up, down")
+
+        dx, dy = moves[direction]
+        x, y = current_pos[0]
+        nx, ny = x + 2 * dx, y + 2 * dy
+
+        if not (0 <= nx < len(laby) and 0 <= ny < len(laby[0])):
+            raise ValueError(f"Jump hors limites: {(nx, ny)}")
+        if laby[nx][ny] == "#":
+            raise ValueError(f"Mur rencontre au jump: {(nx, ny)}")
+        if laby[nx][ny] == "X":
+            raise ValueError(f"Piege touche au jump: {(nx, ny)}")
+
+        current_pos[0] = (nx, ny)
+        history.append((nx, ny))
+        return current_pos[0]
+
+    error: Optional[str] = None
     try:
         sys.settrace(tracer)
-        safe_builtins = {
-            "range": range,
-            "len": len,
-            "enumerate": enumerate,
-            "min": min,
-            "max": max,
-            "abs": abs,
-            "int": int,
-            "str": str,
-            "print": print,
-        }
-        exec(code, {"laby": laby, "move": move, "__builtins__": safe_builtins})
+        globals_scope: Dict[str, Any] = {"laby": laby, "move": move, "jump": jump}
+        if isinstance(exec_globals, dict):
+            globals_scope.update(exec_globals)
+        if "__builtins__" not in globals_scope:
+            globals_scope["__builtins__"] = DEFAULT_SAFE_BUILTINS
+        exec(code, globals_scope)
     except Exception as exc:
         error = f"Erreur pendant l'execution: {exc}"
     finally:
         sys.settrace(None)
 
-    if return_history:
-        x, y = current_pos[0]
+    x, y = current_pos[0]
+    if error:
+        status = "failed"
+        message = error
+    else:
         status = "success" if laby[x][y] == "O" else "failed"
         message = "Arrivee atteinte" if status == "success" else f"Arrivee non atteinte. Position finale: {current_pos[0]}"
-        result = {
+
+    if return_history:
+        return {
             "error": error,
             "history": history,
             "trace": trace,
@@ -124,7 +179,6 @@ def tester(
             "status": status,
             "message": message,
         }
-        return result
 
     if error:
         print(f"✗ {error}")
@@ -134,8 +188,8 @@ def tester(
         print()
         time.sleep(1)
 
-    x, y = current_pos[0]
-    if laby[x][y] == 'O':
+    if laby[x][y] == "O":
         print("✓ Arrivee atteinte")
     else:
         print(f"✗ Arrivee non atteinte. Position finale: {current_pos[0]}")
+    return None

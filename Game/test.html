@@ -115,6 +115,7 @@
     .cell-space { background: #121920; }
     .cell-start { background: #2e66ff; }
     .cell-goal { background: #12c96a; }
+    .cell-trap { background: #d32f2f; color: #ffffff; }
     .cell-player { background: #ffb74d; color: #08120f; }
 
     .meta {
@@ -156,16 +157,14 @@
   <div class="page">
     <section class="panel">
       <h1>Labyrinthe CRUD API</h1>
-      <p>Cette page utilise les fonctions de <code>script/code_reader.py</code>, <code>script/tester.py</code> et <code>main.py</code> via des appels API sans modifier leurs contenus.</p>
+      <p>Cette page utilise les fonctions de <code>script/code_reader.py</code> et <code>script/tester.py</code> via des appels API sans modifier leurs contenus.</p>
     </section>
 
     <section class="panel">
       <div class="toolbar">
         <button id="loadMazeBtn">Charger le labyrinthe</button>
-        <button id="loadCodeBtn" class="secondary">Charger le code</button>
         <button id="saveCodeBtn" class="secondary">Sauvegarder le code</button>
         <button id="runTesterBtn">Exécuter tester()</button>
-        <button id="runMainBtn">Exécuter main.py</button>
       </div>
 
       <div class="grid">
@@ -177,6 +176,7 @@
             <span><span class="legend-dot" style="background:#121920"></span> Vide</span>
             <span><span class="legend-dot" style="background:#2e66ff"></span> Départ</span>
             <span><span class="legend-dot" style="background:#12c96a"></span> Sortie</span>
+            <span><span class="legend-dot" style="background:#d32f2f"></span> Piège</span>
           </div>
         </div>
 
@@ -193,7 +193,7 @@
     </section>
 
     <section class="panel meta">
-      <div class="meta-item"><strong>API</strong><p>/api/maze, /api/code, /api/run-tester, /api/run-main</p></div>
+      <div class="meta-item"><strong>API</strong><p>/api/maze, /api/code, /api/run-tester</p></div>
       <div class="meta-item"><strong>Instructions</strong><p>Lancez <code>python app.py</code> puis ouvrez <code>http://127.0.0.1:5000/</code>.</p></div>
     </section>
   </div>
@@ -203,19 +203,26 @@
     const codeArea = document.getElementById('codeArea');
     const outputArea = document.getElementById('outputArea');
     const loadMazeBtn = document.getElementById('loadMazeBtn');
-    const loadCodeBtn = document.getElementById('loadCodeBtn');
     const saveCodeBtn = document.getElementById('saveCodeBtn');
     const runTesterBtn = document.getElementById('runTesterBtn');
-    const runMainBtn = document.getElementById('runMainBtn');
 
     async function request(path, options = {}) {
       const response = await fetch(path, {
         headers: { 'Content-Type': 'application/json' },
         ...options,
       });
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data = {};
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { error: text || `HTTP ${response.status}` };
+      }
+
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur API');
+        throw new Error(data.error || `Erreur API (${response.status})`);
       }
       return data;
     }
@@ -243,6 +250,9 @@
           } else if (value === 'O') {
             cell.classList.add('cell-goal');
             cell.textContent = 'O';
+          } else if (value === 'X') {
+            cell.classList.add('cell-trap');
+            cell.textContent = 'X';
           } else {
             cell.classList.add('cell-space');
           }
@@ -307,7 +317,11 @@
           body: JSON.stringify({ content: codeArea.value }),
         });
         if (!response.ok) {
-          const errorData = await response.json();
+          let errorData = { error: `Erreur API (${response.status})` };
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            errorData = await response.json();
+          }
           throw new Error(errorData.error || 'Erreur API');
         }
 
@@ -344,20 +358,9 @@
       }
     }
 
-    async function runMain() {
-      try {
-        const data = await request('/api/run-main', { method: 'POST' });
-        outputArea.value = `STDOUT:\n${data.stdout}\nSTDERR:\n${data.stderr}`;
-      } catch (error) {
-        outputArea.value = `Main execution failed: ${error.message}`;
-      }
-    }
-
     loadMazeBtn.addEventListener('click', loadMaze);
-    loadCodeBtn.addEventListener('click', loadCode);
     saveCodeBtn.addEventListener('click', saveCode);
     runTesterBtn.addEventListener('click', runTester);
-    runMainBtn.addEventListener('click', runMain);
 
     window.addEventListener('DOMContentLoaded', () => {
       loadMaze();

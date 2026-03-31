@@ -45,17 +45,6 @@
               Reach the exit with clean, efficient move logic.
             </p>
           </div>
-
-          <div class="pill-row reveal delay-3" aria-label="Run status">
-            <div class="pill" id="play-level-pill">
-              <span class="icon-dot" aria-hidden="true"></span>
-              Level: maze1
-            </div>
-            <div class="pill warn" id="play-status-pill">
-              <span class="icon-dot" aria-hidden="true"></span>
-              Ready
-            </div>
-          </div>
         </section>
 
         <section class="game-shell">
@@ -66,6 +55,8 @@
             </p>
             <ul>
               <li>Walls are marked as `#`</li>
+              <li>Traps are marked as `X`</li>
+              <li>You can use `jump("direction")` for a 2-cell move</li>
               <li>`S` is the start, `O` is the exit</li>
               <li>Lower steps = better XP</li>
             </ul>
@@ -82,20 +73,15 @@
           </aside>
 
           <section class="code-panel reveal delay-2 panel">
-            <div class="code-toolbar">
-              <div class="toolbar-left">
-                <div class="dots" aria-hidden="true">
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                </div>
-                <div class="file-name">solution.py</div>
-              </div>
-            </div>
-
             <div class="code-area">
               <div class="maze-wrap">
-                <h2>Maze</h2>
+                <div class="maze-head">
+                  <h2>Maze</h2>
+                  <div class="maze-meta">
+                    <span id="play-level-pill">Level: maze1</span>
+                    <span id="play-status-pill">Ready</span>
+                  </div>
+                </div>
                 <div class="maze" id="play-maze" aria-label="Maze grid"></div>
               </div>
 
@@ -104,40 +90,16 @@
 
               <div class="play-actions">
                 <button class="btn btn-primary" type="button" id="play-run-btn">Run</button>
-                <button class="btn" type="button" id="play-submit-btn">Submit</button>
-                <a class="btn btn-ghost" href="dashboard.html">Back to dashboard</a>
               </div>
 
               <div class="console" role="status" aria-live="polite">
                 <div class="console-head">
                   <strong>Console</strong>
-                  <div class="status" id="play-run-meta">
-                    <span class="spinner" aria-hidden="true"></span>
-                    <span>Waiting for action...</span>
-                  </div>
                 </div>
                 <pre id="play-console">Select a level and run your code.</pre>
               </div>
             </div>
           </section>
-
-          <aside class="panel side right-side reveal delay-3">
-            <h2>Tips</h2>
-            <div class="hint-grid">
-              <div class="hint">
-                <strong><i aria-hidden="true"></i>Preview first</strong>
-                <p>Use <strong>Run</strong> to test before submitting a scored attempt.</p>
-              </div>
-              <div class="hint">
-                <strong><i aria-hidden="true"></i>Keep it simple</strong>
-                <p>A short loop is usually better than repeated manual moves.</p>
-              </div>
-              <div class="hint">
-                <strong><i aria-hidden="true"></i>Submit while signed in</strong>
-                <p>Only authenticated submissions add XP and dashboard attempts.</p>
-              </div>
-            </div>
-          </aside>
         </section>
       </div>
     </main>

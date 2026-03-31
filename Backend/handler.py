@@ -1,3 +1,4 @@
+import ast
 import json
 import mimetypes
 import sqlite3
@@ -23,6 +24,22 @@ from Game.storage import load_game_catalog as game_load_catalog
 from Game.storage import resolve_level_key as game_resolve_level_key
 from Game.tester import tester
 
+SAFE_EXEC_BUILTINS: Dict[str, Any] = {
+    "range": range,
+    "len": len,
+    "enumerate": enumerate,
+    "min": min,
+    "max": max,
+    "abs": abs,
+    "sum": sum,
+    "int": int,
+    "str": str,
+    "print": print,
+}
+
+BANNED_CALLS = {"open", "exec", "eval", "compile", "__import__", "input"}
+BANNED_MODULES = {"os", "sys", "subprocess", "pathlib", "shutil", "socket"}
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -34,6 +51,23 @@ def clamp(value: float, min_value: float, max_value: float) -> float:
 def is_valid_profile_name(value: str) -> bool:
     trimmed = value.strip()
     return 2 <= len(trimmed) <= 40
+
+
+def validate_game_code(code: str) -> None:
+    try:
+        tree = ast.parse(code, mode="exec")
+    except SyntaxError as exc:
+        raise ValueError(f"Erreur de syntaxe: {exc.msg} (line {exc.lineno})") from exc
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            raise ValueError("Les imports ne sont pas autorises.")
+
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in BANNED_CALLS:
+            raise ValueError(f"Appel interdit: {node.func.id}")
+
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in BANNED_MODULES:
+            raise ValueError(f"Module interdit: {node.value.id}")
 
 
 class AuthRequestHandler(BaseHTTPRequestHandler):
@@ -539,7 +573,13 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         return clone
 
     def _execute_game_run(self, code: str, maze: List[List[str]]) -> Dict[str, Any]:
-        run = tester(code, self._clone_maze(maze), return_history=True, max_trace_steps=2000)
+        run = tester(
+            code,
+            self._clone_maze(maze),
+            return_history=True,
+            max_trace_steps=2000,
+            exec_globals={"__builtins__": SAFE_EXEC_BUILTINS},
+        )
         if not run:
             return {
                 "status": "failed",
@@ -792,6 +832,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         if not content.strip():
             self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Le code ne peut pas etre vide."})
             return
+        try:
+            validate_game_code(content)
+        except ValueError as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            return
 
         maze = level_data.get("maze")
         if not isinstance(maze, list):
@@ -856,6 +901,11 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                 HTTPStatus.BAD_REQUEST,
                 {"ok": False, "error": "Le code est trop long (max 20000 caracteres)."},
             )
+            return
+        try:
+            validate_game_code(content)
+        except ValueError as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
 
         maze = level_data.get("maze")
