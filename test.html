@@ -115,6 +115,7 @@
     .cell-space { background: #121920; }
     .cell-start { background: #2e66ff; }
     .cell-goal { background: #12c96a; }
+    .cell-trap { background: #d32f2f; color: #ffffff; }
     .cell-player { background: #ffb74d; color: #08120f; }
 
     .meta {
@@ -175,6 +176,7 @@
             <span><span class="legend-dot" style="background:#121920"></span> Vide</span>
             <span><span class="legend-dot" style="background:#2e66ff"></span> Départ</span>
             <span><span class="legend-dot" style="background:#12c96a"></span> Sortie</span>
+            <span><span class="legend-dot" style="background:#d32f2f"></span> Piège</span>
           </div>
         </div>
 
@@ -248,6 +250,9 @@
           } else if (value === 'O') {
             cell.classList.add('cell-goal');
             cell.textContent = 'O';
+          } else if (value === 'X') {
+            cell.classList.add('cell-trap');
+            cell.textContent = 'X';
           } else {
             cell.classList.add('cell-space');
           }

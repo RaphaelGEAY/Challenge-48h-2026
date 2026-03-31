@@ -3,7 +3,7 @@ import time
 
 
 def display_laby(laby, current_pos):
-    symbols = {" ": ' ', "#": '#', 'S': 'S', 'O': 'O'}
+    symbols = {" ": ' ', "#": '#', 'S': 'S', 'O': 'O', 'X': 'X'}
     for i in range(len(laby)):
         row = ""
         for j in range(len(laby[i])):
@@ -90,6 +90,37 @@ def tester(code, laby, return_history=False, exec_globals=None):
         if laby[nx][ny] == '#':
             raise ValueError(f"Mur rencontre: {(nx, ny)}")
 
+        if laby[nx][ny] == 'X':
+            raise ValueError(f"Piege touche: {(nx, ny)}")
+
+        current_pos[0] = (nx, ny)
+        history.append((nx, ny))
+        return current_pos[0]
+
+    def jump(direction):
+        moves = {
+            'left': (0, -1),
+            'right': (0, 1),
+            'up': (-1, 0),
+            'down': (1, 0),
+        }
+
+        if direction not in moves:
+            raise ValueError("Direction invalide pour jump. Utilise: left, right, up, down")
+
+        dx, dy = moves[direction]
+        x, y = current_pos[0]
+        nx, ny = x + 2*dx, y + 2*dy
+
+        if not (0 <= nx < len(laby) and 0 <= ny < len(laby[0])):
+            raise ValueError(f"Jump hors limites: {(nx, ny)}")
+
+        if laby[nx][ny] == '#':
+            raise ValueError(f"Mur rencontre au jump: {(nx, ny)}")
+
+        if laby[nx][ny] == 'X':
+            raise ValueError(f"Piege touche au jump: {(nx, ny)}")
+
         current_pos[0] = (nx, ny)
         history.append((nx, ny))
         return current_pos[0]
@@ -97,7 +128,7 @@ def tester(code, laby, return_history=False, exec_globals=None):
     error = None
     try:
         sys.settrace(tracer)
-        globals_scope = {'laby': laby, 'move': move}
+        globals_scope = {'laby': laby, 'move': move, 'jump': jump}
         if isinstance(exec_globals, dict):
             globals_scope.update(exec_globals)
         exec(code, globals_scope)
