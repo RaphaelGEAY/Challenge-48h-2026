@@ -6,7 +6,7 @@ from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from .config import (
     ASSETS_DIR,
@@ -19,6 +19,9 @@ from .config import (
 from .database import db_connection
 from .security import hash_password, is_valid_email, normalize_email, verify_password
 from .sessions import cleanup_sessions, create_session, destroy_session, get_session_user_id
+from Game.storage import load_game_catalog as game_load_catalog
+from Game.storage import resolve_level_key as game_resolve_level_key
+from Game.tester import tester
 
 
 def utc_now_iso() -> str:
@@ -51,10 +54,23 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         cleanup_sessions()
-        path = urlparse(self.path).path
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
 
         if path == "/api/auth/me":
             self._handle_me()
+            return
+
+        if path == "/api/game/levels":
+            self._handle_game_levels()
+            return
+
+        if path == "/api/game/maze":
+            self._handle_game_maze()
+            return
+
+        if path == "/api/game/code":
+            self._handle_game_code()
             return
 
         if path == "/api/dashboard/me":
@@ -89,6 +105,18 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/account/update":
             self._handle_account_update()
+            return
+
+        if path == "/api/game/run":
+            self._handle_game_run()
+            return
+
+        if path == "/api/game/submit":
+            self._handle_game_submit()
+            return
+
+        if path == "/api/game/code/save":
+            self._handle_game_save_code()
             return
 
         self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Route not found"})
@@ -472,6 +500,445 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
                     "last_name": str(updated_user["last_name"]),
                     "email": str(updated_user["email"]),
                     "created_at": str(updated_user["created_at"]),
+                },
+            },
+        )
+
+    def _load_game_catalog(self) -> Tuple[Optional[Dict[str, Any]], Optional[List[str]], Optional[str]]:
+        with db_connection() as conn:
+            catalog, levels = game_load_catalog(conn)
+
+        if not levels:
+            return None, None, "Aucun niveau exploitable trouve en base de donnees."
+
+        return catalog, levels, None
+
+    def _read_requested_level(self) -> str:
+        parsed = urlparse(self.path)
+        query = parse_qs(parsed.query)
+        level = query.get("level", [""])[0]
+        return str(level).strip()
+
+    def _resolve_level_key(
+        self,
+        requested_level: str,
+        available_levels: List[str],
+    ) -> str:
+        return game_resolve_level_key(requested_level, available_levels)
+
+    def _level_to_challenge_id(self, level_key: str) -> int:
+        digits = "".join(ch for ch in level_key if ch.isdigit())
+        if not digits:
+            return 0
+        return int(digits)
+
+    def _clone_maze(self, maze: List[List[Any]]) -> List[List[str]]:
+        clone: List[List[str]] = []
+        for row in maze:
+            clone.append([str(cell) for cell in row])
+        return clone
+
+    def _execute_game_run(self, code: str, maze: List[List[str]]) -> Dict[str, Any]:
+        run = tester(code, self._clone_maze(maze), return_history=True, max_trace_steps=2000)
+        if not run:
+            return {
+                "status": "failed",
+                "message": "Aucun resultat retourne par le moteur de test.",
+                "error": "Execution impossible",
+                "history": [],
+                "trace": [],
+                "current": None,
+                "steps": 0,
+            }
+
+        raw_history = run.get("history", [])
+        raw_trace = run.get("trace", [])
+        raw_current = run.get("current")
+
+        history = [list(pos) for pos in raw_history if isinstance(pos, (list, tuple)) and len(pos) == 2]
+        trace: List[Dict[str, Any]] = []
+        for event in raw_trace[:500]:
+            if not isinstance(event, dict):
+                continue
+            line_no = event.get("lineno")
+            line_text = event.get("line")
+            position = event.get("position")
+            if not isinstance(line_no, int):
+                continue
+            if not isinstance(line_text, str):
+                line_text = ""
+            if not (isinstance(position, list) and len(position) == 2):
+                position = None
+            trace.append(
+                {
+                    "lineno": line_no,
+                    "line": line_text,
+                    "position": position,
+                }
+            )
+
+        current = list(raw_current) if isinstance(raw_current, (list, tuple)) and len(raw_current) == 2 else None
+        status = str(run.get("status") or "failed").lower()
+        message = str(run.get("message") or "")
+        error = run.get("error")
+        error_text = str(error) if error else None
+        steps = max(0, len(history) - 1)
+
+        if status not in {"success", "failed"}:
+            status = "failed"
+
+        return {
+            "status": status,
+            "message": message,
+            "error": error_text,
+            "history": history,
+            "trace": trace,
+            "current": current,
+            "steps": steps,
+        }
+
+    def _handle_game_levels(self) -> None:
+        catalog, levels, error = self._load_game_catalog()
+        if error or catalog is None or levels is None:
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": error or "Erreur jeu"})
+            return
+
+        payload_levels: List[Dict[str, Any]] = []
+        for level_key in levels:
+            level_data = catalog.get(level_key)
+            if not isinstance(level_data, dict):
+                continue
+            maze = level_data.get("maze")
+            if not isinstance(maze, list):
+                continue
+            rows = len(maze)
+            cols = max((len(row) for row in maze if isinstance(row, list)), default=0)
+            payload_levels.append(
+                {
+                    "key": level_key,
+                    "name": f"Niveau {self._level_to_challenge_id(level_key) or level_key}",
+                    "rows": rows,
+                    "cols": cols,
+                }
+            )
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "default_level": levels[0],
+                "levels": payload_levels,
+            },
+        )
+
+    def _handle_game_maze(self) -> None:
+        catalog, levels, error = self._load_game_catalog()
+        if error or catalog is None or levels is None:
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": error or "Erreur jeu"})
+            return
+
+        requested_level = self._read_requested_level()
+        level_key = self._resolve_level_key(requested_level, levels)
+        level_data = catalog.get(level_key)
+        if not isinstance(level_data, dict):
+            self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Niveau introuvable."})
+            return
+
+        maze = level_data.get("maze")
+        if not isinstance(maze, list):
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": "Labyrinthe invalide."})
+            return
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "level": level_key,
+                "maze": self._clone_maze(maze),
+            },
+        )
+
+    def _handle_game_code(self) -> None:
+        catalog, levels, error = self._load_game_catalog()
+        if error or catalog is None or levels is None:
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": error or "Erreur jeu"})
+            return
+
+        requested_level = self._read_requested_level()
+        level_key = self._resolve_level_key(requested_level, levels)
+
+        level_data = catalog.get(level_key)
+        if not isinstance(level_data, dict):
+            self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Niveau introuvable."})
+            return
+
+        default_code = level_data.get("default_code")
+        if not isinstance(default_code, str):
+            default_code = ""
+        resolved_code = default_code
+        from_saved = False
+
+        token = self._session_token_from_cookie()
+        user_id = get_session_user_id(token)
+        if user_id:
+            with db_connection() as conn:
+                saved = conn.execute(
+                    "SELECT code FROM user_level_code WHERE user_id = ? AND level_key = ?",
+                    (user_id, level_key),
+                ).fetchone()
+            if saved and isinstance(saved["code"], str):
+                resolved_code = str(saved["code"])
+                from_saved = True
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "level": level_key,
+                "content": resolved_code,
+                "from_saved": from_saved,
+            },
+        )
+
+    def _handle_game_save_code(self) -> None:
+        user_id = self._require_user_id()
+        if user_id is None:
+            return
+
+        body, error = self._read_json_body()
+        if error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": error})
+            return
+
+        catalog, levels, catalog_error = self._load_game_catalog()
+        if catalog_error or catalog is None or levels is None:
+            self._send_json(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                {"ok": False, "error": catalog_error or "Erreur jeu"},
+            )
+            return
+
+        requested_level = str(body.get("level", "")).strip()
+        level_key = self._resolve_level_key(requested_level, levels)
+        content = body.get("content")
+        if not isinstance(content, str):
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le contenu du code doit etre une chaine."},
+            )
+            return
+
+        trimmed = content.strip()
+        if not trimmed:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le code ne peut pas etre vide."},
+            )
+            return
+
+        if len(content) > 20_000:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le code est trop long (max 20000 caracteres)."},
+            )
+            return
+
+        with db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO user_level_code (user_id, level_key, code, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(user_id, level_key)
+                DO UPDATE SET code = excluded.code, updated_at = excluded.updated_at
+                """,
+                (user_id, level_key, content, utc_now_iso()),
+            )
+            conn.commit()
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "message": "Code sauvegarde.",
+                "level": level_key,
+            },
+        )
+
+    def _handle_game_run(self) -> None:
+        body, error = self._read_json_body()
+        if error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": error})
+            return
+
+        catalog, levels, catalog_error = self._load_game_catalog()
+        if catalog_error or catalog is None or levels is None:
+            self._send_json(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                {"ok": False, "error": catalog_error or "Erreur jeu"},
+            )
+            return
+
+        requested_level = str(body.get("level", "")).strip()
+        level_key = self._resolve_level_key(requested_level, levels)
+        level_data = catalog.get(level_key)
+        if not isinstance(level_data, dict):
+            self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Niveau introuvable."})
+            return
+
+        content = body.get("content")
+        if not isinstance(content, str) or not content.strip():
+            default_code = level_data.get("default_code")
+            content = str(default_code) if isinstance(default_code, str) else ""
+        if not content.strip():
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Le code ne peut pas etre vide."})
+            return
+
+        maze = level_data.get("maze")
+        if not isinstance(maze, list):
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": "Labyrinthe invalide."})
+            return
+
+        run = self._execute_game_run(content, maze)
+        success = run["status"] == "success" and not run["error"]
+
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "ok": True,
+                "level": level_key,
+                "run": {
+                    "status": "passed" if success else "failed",
+                    "message": run["message"],
+                    "error": run["error"],
+                    "history": run["history"],
+                    "trace": run["trace"],
+                    "current": run["current"],
+                    "steps": run["steps"],
+                },
+            },
+        )
+
+    def _handle_game_submit(self) -> None:
+        user_id = self._require_user_id()
+        if user_id is None:
+            return
+
+        body, error = self._read_json_body()
+        if error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": error})
+            return
+
+        catalog, levels, catalog_error = self._load_game_catalog()
+        if catalog_error or catalog is None or levels is None:
+            self._send_json(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                {"ok": False, "error": catalog_error or "Erreur jeu"},
+            )
+            return
+
+        requested_level = str(body.get("level", "")).strip()
+        level_key = self._resolve_level_key(requested_level, levels)
+        level_data = catalog.get(level_key)
+        if not isinstance(level_data, dict):
+            self._send_json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Niveau introuvable."})
+            return
+
+        content = body.get("content")
+        if not isinstance(content, str) or not content.strip():
+            default_code = level_data.get("default_code")
+            content = str(default_code) if isinstance(default_code, str) else ""
+        if not content.strip():
+            self._send_json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Le code ne peut pas etre vide."})
+            return
+
+        if len(content) > 20_000:
+            self._send_json(
+                HTTPStatus.BAD_REQUEST,
+                {"ok": False, "error": "Le code est trop long (max 20000 caracteres)."},
+            )
+            return
+
+        maze = level_data.get("maze")
+        if not isinstance(maze, list):
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"ok": False, "error": "Labyrinthe invalide."})
+            return
+
+        run = self._execute_game_run(content, maze)
+        success = run["status"] == "success" and not run["error"]
+
+        try:
+            raw_time = int(body.get("time_seconds", 0))
+        except (TypeError, ValueError):
+            raw_time = 0
+        time_seconds = max(0, raw_time)
+
+        status = "passed" if success else "failed"
+        tests_total = 1
+        tests_passed = 1 if success else 0
+        steps = int(run["steps"])
+
+        if success:
+            xp_delta = max(20, 120 - max(0, steps - 12) * 4)
+        else:
+            xp_delta = 5
+
+        challenge_id = self._level_to_challenge_id(level_key)
+        created_at = utc_now_iso()
+        with db_connection() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO attempts (
+                    user_id, challenge_id, status, tests_passed, tests_total, time_seconds, xp_delta, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    user_id,
+                    challenge_id,
+                    status,
+                    tests_passed,
+                    tests_total,
+                    time_seconds,
+                    xp_delta,
+                    created_at,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_level_code (user_id, level_key, code, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(user_id, level_key)
+                DO UPDATE SET code = excluded.code, updated_at = excluded.updated_at
+                """,
+                (user_id, level_key, content, created_at),
+            )
+            conn.commit()
+
+            attempt_id = cursor.lastrowid
+
+        self._send_json(
+            HTTPStatus.CREATED,
+            {
+                "ok": True,
+                "message": "Tentative enregistree.",
+                "level": level_key,
+                "run": {
+                    "status": status,
+                    "message": run["message"],
+                    "error": run["error"],
+                    "steps": steps,
+                    "history": run["history"],
+                    "trace": run["trace"],
+                    "current": run["current"],
+                },
+                "attempt": {
+                    "id": int(attempt_id) if attempt_id is not None else None,
+                    "challenge_id": challenge_id,
+                    "status": status,
+                    "tests_passed": tests_passed,
+                    "tests_total": tests_total,
+                    "time_seconds": time_seconds,
+                    "xp_delta": xp_delta,
                 },
             },
         )

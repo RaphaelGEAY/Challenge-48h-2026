@@ -50,6 +50,8 @@
   box-shadow: 0 0 0 6px rgba(124,92,255,.12);
 }
 .pill.warn .icon-dot{ background: var(--warn); box-shadow: 0 0 0 6px rgba(255,176,32,.14); }
+.pill.good .icon-dot{ background: var(--good); box-shadow: 0 0 0 6px rgba(46,229,157,.14); }
+.pill.bad .icon-dot{ background: var(--bad); box-shadow: 0 0 0 6px rgba(255,77,109,.14); }
 
 .game-shell{
   display:grid;
@@ -77,6 +79,33 @@
   color: var(--muted);
   font-size: 13px;
   line-height: 1.7;
+}
+
+.control-block{
+  margin-top: 14px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+.control-block label{
+  color: rgba(234,240,255,.84);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.select{
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  color: rgba(234,240,255,.92);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.wide{
+  width: 100%;
 }
 
 .code-panel{
@@ -128,24 +157,6 @@
   gap: 10px;
 }
 
-.mini-btn{
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 14px;
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.04);
-  color: rgba(234,240,255,.9);
-  font-weight: 760;
-  font-size: 12px;
-  cursor:pointer;
-  transition: transform .15s ease, background .2s ease, border-color .2s ease;
-}
-.mini-btn:hover{
-  transform: translateY(-1px);
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.22);
-}
-
 .code-area{
   padding: 16px;
   background:
@@ -153,39 +164,66 @@
     rgba(0,0,0,.12);
 }
 
-.code{
-  margin:0;
+.maze-wrap h2{
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.maze{
+  display: grid;
+  gap: 2px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 220px;
+  overflow: auto;
+}
+
+.maze-cell{
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.maze-wall{ background: #2b334d; }
+.maze-space{ background: #121920; }
+.maze-start{ background: #2e66ff; color: #f3f6ff; }
+.maze-goal{ background: #12c96a; color: #07140d; }
+.maze-player{ background: #ffb74d; color: #1a1207; }
+
+.editor-label{
+  display:block;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  color: rgba(234,240,255,.84);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.editor{
+  width: 100%;
+  min-height: 260px;
+  resize: vertical;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+  color: rgba(234,240,255,.9);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 13px;
   line-height: 1.7;
-  color: rgba(234,240,255,.86);
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.03);
-  border-radius: 18px;
-  padding: 14px 14px;
-  overflow:auto;
-  min-height: 330px;
+  padding: 12px;
 }
 
-.code .cursor-line{
-  position:relative;
-}
-.code .cursor-line::after{
-  content:"";
-  position:absolute;
-  left:0;
-  top: calc(1em * 1.1);
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(124,92,255,1), rgba(51,214,255,1));
-  opacity:.9;
-  transform-origin:left;
-  animation: cursorSweep 1.6s ease-in-out infinite;
-}
-@keyframes cursorSweep{
-  0%{ transform: scaleX(.25); opacity:.35; }
-  40%{ transform: scaleX(.95); opacity:.9; }
-  100%{ transform: scaleX(.25); opacity:.35; }
+.editor:focus{
+  outline:none;
+  border-color: rgba(51,214,255,.55);
+  background: rgba(255,255,255,.05);
 }
 
 .console{
@@ -252,6 +290,7 @@
 @media (max-width: 860px){
   .game-shell{ grid-template-columns: 1fr; }
   .game-shell .left-side{ order: 2; }
+  .play-actions .btn{ width: 100%; }
 }
 
 .hint-grid{

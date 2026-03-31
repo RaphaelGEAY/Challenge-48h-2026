@@ -1,6 +1,8 @@
 import sqlite3
 
-from .config import DB_PATH
+from Game.storage import seed_game_levels
+
+from .config import DB_PATH, MAZE_PATH
 
 
 def _ensure_column(
@@ -52,6 +54,33 @@ def init_db() -> None:
             """
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(user_id, created_at DESC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_level_code (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                level_key TEXT NOT NULL,
+                code TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(user_id, level_key),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_user_level_code_user_level ON user_level_code(user_id, level_key)"
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS game_levels (
+                level_key TEXT PRIMARY KEY,
+                maze_json TEXT NOT NULL,
+                default_code TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        seed_game_levels(conn, MAZE_PATH)
         conn.commit()
 
 

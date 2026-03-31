@@ -4,6 +4,7 @@ import re
 BASE_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = BASE_DIR / "Assets"
 DB_PATH = BASE_DIR / "database.db"
+MAZE_PATH = BASE_DIR / "Game" / "maze.json"
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PASSWORD_MIN_LENGTH = 8

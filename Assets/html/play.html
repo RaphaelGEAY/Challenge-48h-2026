@@ -40,43 +40,48 @@
       <div class="container">
         <section class="game-head">
           <div class="left">
-            <h1 class="reveal delay-1">Run #21</h1>
+            <h1 class="reveal delay-1">Maze Challenge</h1>
             <p class="subline reveal delay-2">
-              Clear the objective using as few moves as possible, with maximum accuracy.
+              Reach the exit with clean, efficient move logic.
             </p>
           </div>
 
           <div class="pill-row reveal delay-3" aria-label="Run status">
-            <div class="pill">
+            <div class="pill" id="play-level-pill">
               <span class="icon-dot" aria-hidden="true"></span>
-              Time: 03:12
+              Level: maze1
             </div>
-            <div class="pill warn">
+            <div class="pill warn" id="play-status-pill">
               <span class="icon-dot" aria-hidden="true"></span>
-              Scoring…
+              Ready
             </div>
           </div>
         </section>
 
         <section class="game-shell">
           <aside class="panel side left-side reveal delay-1">
-            <h2>Objective</h2>
+            <h2>Challenge</h2>
             <p>
-              Your job is to complete the task efficiently: fewer wasted actions, fewer mistakes, and
-              cleaner execution.
+              Write Python using `move("up" | "down" | "left" | "right")` and navigate from `S` to `O`.
             </p>
             <ul>
-              <li>Spend fewer moves</li>
-              <li>Avoid errors</li>
-              <li>Finish clean</li>
+              <li>Walls are marked as `#`</li>
+              <li>`S` is the start, `O` is the exit</li>
+              <li>Lower steps = better XP</li>
             </ul>
 
-            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height:1.6;">
-              Use the hints on the right when you start bleeding time.
+            <div class="control-block">
+              <label for="play-level-select">Level</label>
+              <select id="play-level-select" class="select"></select>
+            </div>
+
+            <div class="control-block">
+              <button class="btn btn-ghost wide" type="button" id="play-load-level">Reload level</button>
+              <button class="btn btn-ghost wide" type="button" id="play-save-code">Save code</button>
             </div>
           </aside>
 
-          <div class="code-panel reveal delay-2">
+          <section class="code-panel reveal delay-2 panel">
             <div class="code-toolbar">
               <div class="toolbar-left">
                 <div class="dots" aria-hidden="true">
@@ -84,65 +89,53 @@
                   <span class="dot"></span>
                   <span class="dot"></span>
                 </div>
-                <div class="file-name">run_plan.txt</div>
-              </div>
-              <div class="toolbar-actions">
-                <button class="mini-btn" type="button">Optimize</button>
-                <button class="mini-btn" type="button">Restart</button>
+                <div class="file-name">solution.py</div>
               </div>
             </div>
 
             <div class="code-area">
-              <pre class="code" aria-label="Run plan mock">
-<code><span>// Plan your run (efficiency matters)</span>
-1) Read the objective carefully.
-2) Choose the shortest safe path.
-3) Avoid retries — they cost distance.
+              <div class="maze-wrap">
+                <h2>Maze</h2>
+                <div class="maze" id="play-maze" aria-label="Maze grid"></div>
+              </div>
 
-<span class="cursor-line">Result: fewer moves, higher accuracy, more progress.</span></code></pre>
+              <label class="editor-label" for="play-code">Code editor</label>
+              <textarea id="play-code" class="editor" spellcheck="false"></textarea>
 
               <div class="play-actions">
-                <button class="btn btn-primary" type="button">Score run</button>
-                <button class="btn" type="button">Submit</button>
+                <button class="btn btn-primary" type="button" id="play-run-btn">Run</button>
+                <button class="btn" type="button" id="play-submit-btn">Submit</button>
                 <a class="btn btn-ghost" href="dashboard.html">Back to dashboard</a>
               </div>
 
               <div class="console" role="status" aria-live="polite">
                 <div class="console-head">
                   <strong>Console</strong>
-                  <div class="status">
+                  <div class="status" id="play-run-meta">
                     <span class="spinner" aria-hidden="true"></span>
-                    <span>Waiting for results…</span>
+                    <span>Waiting for action...</span>
                   </div>
                 </div>
-                <pre>
-<span class="ok">✔ Run completed</span>
-<span class="err">✖ Efficiency penalty applied</span>
-Hint: reduce retries and tighten your path.
-</pre>
+                <pre id="play-console">Select a level and run your code.</pre>
               </div>
             </div>
-          </div>
+          </section>
 
           <aside class="panel side right-side reveal delay-3">
-            <h2>Efficiency hints</h2>
+            <h2>Tips</h2>
             <div class="hint-grid">
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Cut waste</strong>
-                <p>Remove steps that don’t change the outcome.</p>
+                <strong><i aria-hidden="true"></i>Preview first</strong>
+                <p>Use <strong>Run</strong> to test before submitting a scored attempt.</p>
               </div>
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Stay accurate</strong>
-                <p>One mistake can cost more distance than one slow move.</p>
+                <strong><i aria-hidden="true"></i>Keep it simple</strong>
+                <p>A short loop is usually better than repeated manual moves.</p>
               </div>
               <div class="hint">
-                <strong><i aria-hidden="true"></i>Pick a route</strong>
-                <p>Choose the simplest path you can execute consistently.</p>
+                <strong><i aria-hidden="true"></i>Submit while signed in</strong>
+                <p>Only authenticated submissions add XP and dashboard attempts.</p>
               </div>
-            </div>
-
-            <div style="margin-top:14px; color: var(--muted2); font-size: 13px; line-height: 1.6;">
-              Your next improvement: reduce retries and tighten the plan.
             </div>
           </aside>
         </section>
@@ -161,6 +154,7 @@ Hint: reduce retries and tighten your path.
       </div>
     </footer>
     <script src="../js/account-nav.js"></script>
+    <script src="../js/play.js"></script>
   </body>
 </html>
 
