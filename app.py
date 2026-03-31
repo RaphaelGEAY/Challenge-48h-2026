@@ -187,5 +187,4 @@ def api_run_tester():
 
 
 if __name__ == '__main__':
-    debug_mode = os.getenv('FLASK_DEBUG', '0').lower() in ('1', 'true', 'yes', 'on')
-    app.run(debug=debug_mode)
+    app.run(debug=True)
