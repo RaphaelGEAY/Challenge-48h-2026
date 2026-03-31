@@ -1,8 +1,8 @@
 import json
-import sqlite3
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+DEFAULT_MAZE_PATH = Path(__file__).resolve().parent / "maze.json"
 
 
 def default_code_template() -> str:
@@ -63,12 +63,7 @@ def _fallback_level() -> List[List[str]]:
     ]
 
 
-def seed_game_levels(conn: sqlite3.Connection, maze_path: Path) -> None:
-    row = conn.execute("SELECT COUNT(*) FROM game_levels").fetchone()
-    existing_count = int(row[0]) if row and row[0] is not None else 0
-    if existing_count > 0:
-        return
-
+def _read_payload(maze_path: Path) -> Dict[str, Any]:
     payload: Dict[str, Any] = {}
     if maze_path.exists():
         try:
@@ -78,58 +73,22 @@ def seed_game_levels(conn: sqlite3.Connection, maze_path: Path) -> None:
                 payload = raw
         except (json.JSONDecodeError, OSError):
             payload = {}
+    return payload
 
-    levels = _levels_from_json_payload(payload)
-    if not levels:
-        levels = {"maze1": _fallback_level()}
+
+def load_game_catalog(maze_path: Optional[Path] = None) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+    source_path = maze_path or DEFAULT_MAZE_PATH
+    payload = _read_payload(source_path)
+    levels_payload = _levels_from_json_payload(payload)
+    if not levels_payload:
+        levels_payload = {"maze1": _fallback_level()}
 
     default_code = payload.get("content")
     if not isinstance(default_code, str) or not default_code.strip():
         default_code = default_code_template()
 
-    now = datetime.now(timezone.utc).isoformat()
-    for level_key in sorted(levels.keys(), key=level_sort_key):
-        conn.execute(
-            """
-            INSERT INTO game_levels (level_key, maze_json, default_code, updated_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                level_key,
-                json.dumps(levels[level_key], ensure_ascii=True),
-                default_code,
-                now,
-            ),
-        )
-
-
-def load_game_catalog(conn: sqlite3.Connection) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
-    rows = conn.execute(
-        """
-        SELECT level_key, maze_json, default_code
-        FROM game_levels
-        ORDER BY level_key ASC
-        """
-    ).fetchall()
-
     catalog: Dict[str, Dict[str, Any]] = {}
-    for row in rows:
-        level_key = str(row["level_key"])
-        maze_json = row["maze_json"]
-        default_code = row["default_code"]
-        if not isinstance(maze_json, str):
-            continue
-        if not isinstance(default_code, str):
-            default_code = default_code_template()
-        try:
-            raw_maze = json.loads(maze_json)
-        except json.JSONDecodeError:
-            continue
-
-        maze = _normalize_maze(raw_maze)
-        if not maze:
-            continue
-
+    for level_key, maze in levels_payload.items():
         catalog[level_key] = {
             "maze": maze,
             "default_code": default_code if default_code.strip() else default_code_template(),

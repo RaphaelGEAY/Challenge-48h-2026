@@ -539,11 +539,10 @@ class AuthRequestHandler(BaseHTTPRequestHandler):
         )
 
     def _load_game_catalog(self) -> Tuple[Optional[Dict[str, Any]], Optional[List[str]], Optional[str]]:
-        with db_connection() as conn:
-            catalog, levels = game_load_catalog(conn)
+        catalog, levels = game_load_catalog()
 
         if not levels:
-            return None, None, "Aucun niveau exploitable trouve en base de donnees."
+            return None, None, "Aucun niveau exploitable trouve dans maze.json."
 
         return catalog, levels, None
 

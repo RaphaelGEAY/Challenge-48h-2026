@@ -3,13 +3,10 @@ const path = require('path');
 const cwd = path.resolve(__dirname, '..');
 
 const pyCode = `from Game.main import main
-from Backend.database import db_connection, init_db
 from Game.storage import load_game_catalog
 from Game.tester import display_laby, tester
 
-init_db()
-with db_connection() as conn:
-    catalog, levels = load_game_catalog(conn)
+catalog, levels = load_game_catalog()
 
 level_key = levels[0]
 code = catalog[level_key]['default_code']

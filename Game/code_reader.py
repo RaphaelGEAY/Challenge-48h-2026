@@ -1,13 +1,12 @@
-import sqlite3
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 from .storage import load_game_catalog, resolve_level_key
 
 
-def _resolve_level(conn: sqlite3.Connection, level_key: str) -> Tuple[str, List[List[str]], str]:
-    catalog, levels = load_game_catalog(conn)
+def _resolve_level(level_key: str) -> Tuple[str, List[List[str]], str]:
+    catalog, levels = load_game_catalog()
     if not levels:
-        raise ValueError("Aucun niveau n'est disponible en base de donnees.")
+        raise ValueError("Aucun niveau n'est disponible dans maze.json.")
 
     resolved_level = resolve_level_key(level_key, levels)
     data = catalog.get(resolved_level)
@@ -23,11 +22,11 @@ def _resolve_level(conn: sqlite3.Connection, level_key: str) -> Tuple[str, List[
     return resolved_level, maze, default_code
 
 
-def read_code(conn: sqlite3.Connection, level_key: str = "maze1") -> str:
-    _resolved_level, _maze, default_code = _resolve_level(conn, level_key)
+def read_code(_conn: Any = None, level_key: str = "maze1") -> str:
+    _resolved_level, _maze, default_code = _resolve_level(level_key)
     return default_code
 
 
-def read_laby(conn: sqlite3.Connection, level_key: str = "maze1") -> List[List[str]]:
-    _resolved_level, maze, _default_code = _resolve_level(conn, level_key)
+def read_laby(_conn: Any = None, level_key: str = "maze1") -> List[List[str]]:
+    _resolved_level, maze, _default_code = _resolve_level(level_key)
     return maze

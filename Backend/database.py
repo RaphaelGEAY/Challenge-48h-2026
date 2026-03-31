@@ -1,8 +1,6 @@
 import sqlite3
 
-from Game.storage import seed_game_levels
-
-from .config import DB_PATH, MAZE_PATH
+from .config import DB_PATH
 
 
 def _ensure_column(
@@ -70,17 +68,8 @@ def init_db() -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_user_level_code_user_level ON user_level_code(user_id, level_key)"
         )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS game_levels (
-                level_key TEXT PRIMARY KEY,
-                maze_json TEXT NOT NULL,
-                default_code TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-            """
-        )
-        seed_game_levels(conn, MAZE_PATH)
+        # Les niveaux de jeu sont desormais lus directement depuis Game/maze.json.
+        conn.execute("DROP TABLE IF EXISTS game_levels")
         conn.commit()
 
 
